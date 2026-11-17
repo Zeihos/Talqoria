@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo TALQORIA v0.13 OFFLINE BACKUP
+echo TALQORIA v0.14 OFFLINE BACKUP
  echo Stop Minecraft and confirm the game server is no longer running before this script.
 choice /C YN /M "Is the server completely stopped"
 if errorlevel 2 (echo Cancelled.& exit /b 1)

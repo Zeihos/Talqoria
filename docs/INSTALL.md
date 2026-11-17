@@ -1,6 +1,6 @@
 # Установка и запуск TALQORIA
 
-> Документ для разработчиков и тестировщиков. TalqoriaCore 0.13.0 — Developer Alpha, а не готовый публичный сервер.
+> Документ для разработчиков и тестировщиков. TalqoriaCore 0.14.0 — Developer Alpha, а не готовый публичный сервер.
 
 [← На главную](../README.md) · [План работ](ROADMAP.md)
 
@@ -34,7 +34,7 @@ cd Talqoria
 mvn -f plugin/pom.xml clean package
 ```
 
-После сборки создаётся `plugin/target/talqoria-core-0.13.0.jar`. Для установки его необходимо скопировать как `server/plugins/TalqoriaCore.jar`.
+После сборки создаётся `plugin/target/talqoria-core-0.14.0.jar`. Для установки его необходимо скопировать как `server/plugins/TalqoriaCore.jar`.
 
 Альтернативный вариант — открыть успешный прогон [GitHub Actions](https://github.com/Zeihos/Talqoria/actions/workflows/verify.yml) и скачать `TalqoriaCore-dev` из **Artifacts**. Это тестовая сборка.
 
@@ -45,7 +45,7 @@ mvn -f plugin/pom.xml clean package
 3. Для закрытого теста включите `online-mode=true`, `white-list=true`, `enable-rcon=false`.
 4. Запустите `server/start-windows.bat` либо `server/start-linux.sh`.
 5. Если Paper просит принять EULA, прочитайте условия и **самостоятельно** установите `eula=true`, только если согласны.
-6. Повторно запустите сервер. Проверьте наличие `Enabling TalqoriaCore v0.13.0` в логах и команды `/tq help`, `/tq balance`.
+6. Повторно запустите сервер. Проверьте наличие `Enabling TalqoriaCore v0.14.0` в логах и команды `/tq help`, `/tq balance`.
 
 **Предварительная диагностика:** из корня репозитория запустите `node tools/preflight.js .` или `PREFLIGHT_WINDOWS.bat` на Windows (`./PREFLIGHT_LINUX.sh` на Linux). Можно передать путь к каталогу проекта или `server/`. Проверка не изменяет файлы и помогает обнаружить отсутствующие JAR, открытый RCON, выключенную авторизацию и риски сохранений. Наличие результата READY не равно успешному тесту Paper.
 
@@ -67,7 +67,7 @@ node tools/repo-check.js
 1. Выполните `stop` в консоли Paper и дождитесь завершения процесса.
 2. Сделайте отдельную резервную копию `server/world/` и `server/plugins/TalqoriaCore/`. При необходимости воспользуйтесь `BACKUP_OFFLINE_WINDOWS.bat` **только при остановленном сервере**.
 3. Замените только `server/plugins/TalqoriaCore.jar` на новую собранную версию.
-4. **Не удаляйте и не перезаписывайте** `players.yml`, `territories.xml`, `quests.xml`, `placed-blocks.xml` и `placed-blocks.journal`.
+4. **Не удаляйте и не перезаписывайте** `players.yml`, `territories.xml`, `quests.xml`, `placed-blocks.xml`, `placed-blocks.xml.bak` и `placed-blocks.journal`.
 5. Запустите Paper и выполните тест команд, приватов и сохранений. При ошибках записи прекратите тестирование и проверьте резервную копию.
 
 **Не копируйте весь каталог с исходниками поверх действующего сервера.** Он не содержит игрового мира.

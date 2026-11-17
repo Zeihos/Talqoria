@@ -101,7 +101,7 @@ final class QuestController implements Listener {
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
-        if (locked || !eligible(event.getPlayer())) return;
+        if (locked) return;
         Material m = event.getBlock().getType();
         if (placed != null) {
             long started = System.nanoTime();
@@ -109,6 +109,9 @@ final class QuestController implements Listener {
             catch (IOException e) { failedProvenance(e); return; }
             finally { plugin.traceLedger("break", started); }
         }
+        // Creative/adventure/spectator breaks must clear stale provenance,
+        // but never count toward Survival-only daily objectives.
+        if (!eligible(event.getPlayer())) return;
         QuestStore.Objective objective = switch (m) {
             case STONE, DEEPSLATE -> QuestStore.Objective.STONE;
             case OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, ACACIA_LOG,

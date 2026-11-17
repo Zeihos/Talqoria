@@ -37,9 +37,12 @@ public final class PlacedBlockLedger {
     public PlacedBlockLedger(Path file) throws IOException {
         this.file = file;
         this.journal = file.resolveSibling("placed-blocks.journal");
+        if (!Files.exists(file) && Files.exists(backupPath()))
+            throw new IOException("Placed-block primary missing but .bak exists; stop and reconcile the saved data");
         loadSnapshot();
         replayJournal();
     }
+    private Path backupPath() { return file.resolveSibling(file.getFileName() + ".bak"); }
     public int size() { return placed.size(); }
     public boolean contains(Position pos) { return placed.contains(pos); }
     public boolean isLocked() { return locked; }
@@ -200,6 +203,17 @@ public final class PlacedBlockLedger {
             try (FileChannel ch = FileChannel.open(temp, StandardOpenOption.WRITE)) { ch.force(true); }
             try { Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
             catch (AtomicMoveNotSupportedException noAtomic) { Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING); }
+            // Mirror the durable snapshot through a temporary file, not an in-place
+            // overwrite of .bak. The journal is rotated only after both snapshots exist.
+            Path backupTemp = Files.createTempFile(dir, "block-backup-", ".tmp");
+            try {
+                Files.copy(file, backupTemp, StandardCopyOption.REPLACE_EXISTING);
+                try (FileChannel ch = FileChannel.open(backupTemp, StandardOpenOption.WRITE)) { ch.force(true); }
+                try { Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
+                catch (AtomicMoveNotSupportedException noAtomic) {
+                    Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            } finally { Files.deleteIfExists(backupTemp); }
             Path empty = Files.createTempFile(dir, "block-journal-", ".tmp");
             try {
                 try (FileChannel ch = FileChannel.open(empty, StandardOpenOption.WRITE)) { ch.force(true); }

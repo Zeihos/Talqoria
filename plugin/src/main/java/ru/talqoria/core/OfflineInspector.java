@@ -14,7 +14,7 @@ public final class OfflineInspector {
             out.println("ERROR: TalqoriaCore data folder does not exist: " + folder);
             return 3;
         }
-        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.11 (READ ONLY)");
+        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.14 (READ ONLY)");
         out.println("Folder: " + folder.toAbsolutePath().normalize());
         out.println("Ensure Paper is stopped. A live check can give inconsistent results.");
         int result = 0;
@@ -67,7 +67,24 @@ public final class OfflineInspector {
                 }
             } else out.println(filename + ": not present (normal for a brand new server)");
         }
-        out.println("NOTE: This is not a Paper runtime test, backup verifier or complete corruption scan.");
+        // The same WAL parser used by the plugin verifies format, checksum and replay.
+        // Reading this state does not checkpoint, overwrite or migrate saved files.
+        Path snapshot = folder.resolve("placed-blocks.xml");
+        Path provenanceBackup = folder.resolve("placed-blocks.xml.bak");
+        Path journalFile = folder.resolve("placed-blocks.journal");
+        if (Files.exists(snapshot) || Files.exists(provenanceBackup) || Files.exists(journalFile)) {
+            try {
+                PlacedBlockLedger ledger = new PlacedBlockLedger(snapshot);
+                out.println("BLOCK PROVENANCE: VERIFIED " + ledger.size() + " tracked positions");
+            } catch (IOException | RuntimeException invalid) {
+                out.println("BLOCK PROVENANCE: RECOVERY REQUIRED - " + invalid.getMessage()
+                    + "; do not overwrite the snapshot, .bak or journal");
+                result = 3;
+            }
+        } else {
+            out.println("BLOCK PROVENANCE: not present (normal for a new server)");
+        }
+        out.println("NOTE: This is not a Paper runtime test, wallet validator or full filesystem backup verifier.");
         out.println(result == 0 ? "RESULT: no issues detected in checked records" :
             result == 2 ? "RESULT: ACTION REQUIRED - reconcile pending trade offline" :
                           "RESULT: ERROR - stop and investigate data before bringing server online");

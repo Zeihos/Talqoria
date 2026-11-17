@@ -38,6 +38,9 @@ public final class PlacedBlockLedgerSelfTest {
             check(recovered.contains(d), "piston replay");
             recovered.checkpoint();
             check(Files.size(journal) == 0, "checkpoint rotated journal");
+            Path backup = dir.resolve("placed-blocks.xml.bak");
+            check(Files.size(backup) > 0, "checkpoint wrote durable backup");
+            byte[] savedBackup = Files.readAllBytes(backup);
             check(new PlacedBlockLedger(xml).contains(d), "snapshot reload");
             var pending = new PlacedBlockLedger(xml);
             pending.record(a);
@@ -48,6 +51,25 @@ public final class PlacedBlockLedgerSelfTest {
             check(rerun.contains(a) && rerun.contains(d) && rerun.size() == 2,
                 "checkpoint interrupted before journal rotation");
             rerun.checkpoint();
+            byte[] beforeDeletion = Files.readAllBytes(backup);
+            // Missing primary plus backup must stop startup, never reinitialise
+            // an empty ledger and overwrite a player's progress on shutdown.
+            Files.delete(xml);
+            boolean missingPrimaryLocked = false;
+            try { new PlacedBlockLedger(xml); }
+            catch (IOException e) { missingPrimaryLocked = true; }
+            check(missingPrimaryLocked, "missing primary with backup fails closed");
+            check(Files.exists(backup) && java.util.Arrays.equals(Files.readAllBytes(backup), beforeDeletion),
+                "backup preserved byte-for-byte after failed startup");
+            Files.copy(backup, xml);
+            check(new PlacedBlockLedger(xml).contains(d), "operator may restore verified backup");
+            // Prior v0.13 snapshots without a .bak must remain readable.
+            Path legacyDir = Files.createDirectory(dir.resolve("legacy"));
+            Path legacy = legacyDir.resolve("placed-blocks.xml");
+            Files.copy(xml, legacy);
+            check(new PlacedBlockLedger(legacy).contains(d), "legacy snapshot without backup opens");
+            new PlacedBlockLedger(legacy).checkpoint();
+            check(Files.exists(legacyDir.resolve("placed-blocks.xml.bak")), "legacy checkpoint adds backup");
             Files.writeString(journal, "badline\n", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             boolean corrupt = false;
             try { new PlacedBlockLedger(xml); } catch (IOException e) { corrupt = true; }
