@@ -154,7 +154,10 @@ function check(root) {
 }
 function runCli(argv) {
   const rootArg = argv.find(x => !x.startsWith('--')) || path.resolve(__dirname, '..');
-  const root = path.resolve(rootArg);
+  const candidate = path.resolve(rootArg);
+  // Accept both the project root and its server/ directory.
+  const root = path.basename(candidate).toLowerCase() === 'server' && !fs.existsSync(path.join(candidate, 'server'))
+    ? path.dirname(candidate) : candidate;
   const report = check(root);
   if (argv.includes('--json')) console.log(JSON.stringify(report, null, 2));
   else {

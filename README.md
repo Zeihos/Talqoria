@@ -77,7 +77,7 @@ mvn -f plugin/pom.xml clean package
 node --test backend/test/*.test.js
 ```
 
-Для запуска Minecraft-сервера потребуется отдельно скачать совместимый `paper.jar` с [PaperMC](https://papermc.io/downloads/paper). Скрипты сервера расположены в `server/`.
+Для запуска Minecraft-сервера потребуется отдельно скачать совместимый `paper.jar` с [PaperMC](https://papermc.io/downloads/paper). Скрипты сервера расположены в `server/`. Перед запуском выполните `PREFLIGHT_WINDOWS.bat` или `node tools/preflight.js .`.
 
 **Подробная инструкция:** [установка, конфигурация и обновление](docs/INSTALL.md).
 
@@ -99,9 +99,7 @@ TALQORIA/
 
 ## Сборки и проверка качества
 
-[![Сборка TALQORIA](https://github.com/Zeihos/Talqoria/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Zeihos/Talqoria/actions/workflows/verify.yml)
-
-В GitHub Actions автоматически выполняются проверки Java-хранилища, тесты Node.js и сборка TalqoriaCore с Paper API. Если сборка завершилась успешно, тестовый JAR можно найти в **Actions → Verify Talqoria → Artifacts** (`TalqoriaCore-dev`).
+В GitHub Actions автоматически выполняются проверки Java-хранилища, тесты Node.js, проверка структуры репозитория и сборка TalqoriaCore с Paper API. Локально качество структуры можно проверить командой `node tools/repo-check.js`. Если сборка завершилась успешно, тестовый JAR можно найти в **Actions → Verify Talqoria → Artifacts** (`TalqoriaCore-dev`).
 
 Это **сборка для тестирования**, а не подтверждённый игровой релиз. Перед обновлением сервера обязательно остановите Paper и сохраните мир и данные `plugins/TalqoriaCore/`.
 
@@ -122,7 +120,7 @@ TALQORIA/
 
 Нашли ошибку, хотите предложить улучшение или помочь с кодом? Используйте [Issues](https://github.com/Zeihos/Talqoria/issues) и [Pull Requests](https://github.com/Zeihos/Talqoria/pulls). Перед отправкой прочитайте **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-Пожалуйста, **не публикуйте** токены, файлы игроков, приватные данные и полные серверные архивы в открытых обращениях.
+Пожалуйста, **не публикуйте** токены, файлы игроков, приватные данные и полные серверные архивы в открытых обращениях. Прочитайте [правила безопасности](SECURITY.md) и [историю изменений](CHANGELOG.md).
 
 <details>
 <summary><b>Лицензия и хранение данных</b></summary>
