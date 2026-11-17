@@ -118,15 +118,23 @@ public final class TalqoriaCorePlugin extends JavaPlugin implements Listener {
         if (!walletLockdown)
             for (Player player : Bukkit.getOnlinePlayers()) dirty |= wallets.ensurePlayer(player.getUniqueId());
         if (dirty) persistWallets();
+        if (!Bukkit.getOnlineMode()) {
+            getLogger().warning("OFFLINE MODE ACTIVE: unauthenticated UUIDs can differ when enabling online-mode.");
+            getLogger().warning("Keep the test server private and reconcile account-linked data before changing authentication.");
+        }
         bridge = new StatusBridge(this);
         bridge.start();
-        getLogger().info("TalqoriaCore v0.11 started. Territory lockdown: " + territoryLockdown
+        getLogger().info("TalqoriaCore v0.13 started. Territory lockdown: " + territoryLockdown
             + ", wallet lockdown: " + walletLockdown + ", audit lockdown: " + auditLockdown);
     }
 
     @Override
     public void onDisable() {
         if (bridge != null) bridge.stop();
+        if (placedBlocks != null && !placedBlocks.isLocked()) {
+            try { placedBlocks.checkpoint(); }
+            catch (IOException e) { getLogger().severe("BLOCK JOURNAL CHECKPOINT FAILED: " + e.getMessage()); }
+        }
         if (questController != null && !questLockdown) questController.saveIfDirty();
         if (wallets != null && !walletLockdown) persistWallets();
         if (territories != null && !territoryLockdown) persistTerritories();
@@ -167,6 +175,12 @@ public final class TalqoriaCorePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    /** Log slow file operations without blocking the server on additional I/O. */
+    public void traceLedger(String operation, long startedNanos) {
+        long durationMs = (System.nanoTime() - startedNanos) / 1_000_000;
+        long warn = Math.max(5, getConfig().getLong("diagnostics.slow-ledger-ms", 30));
+        if (durationMs >= warn) getLogger().warning("SLOW_LEDGER " + operation + " " + durationMs + "ms");
+    }
     public PlacedBlockLedger placedBlocks() { return placedBlocks; }
     public AuditLedger staffAudit() { return staffAudit; }
     public boolean auditLocked() { return auditLockdown || staffAudit == null || staffAudit.isLocked(); }

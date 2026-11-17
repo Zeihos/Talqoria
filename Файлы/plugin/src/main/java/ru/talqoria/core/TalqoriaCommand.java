@@ -38,7 +38,18 @@ public final class TalqoriaCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        long started = System.nanoTime();
         String action = args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
+        try {
+            return executeTracked(sender, action, args);
+        } finally {
+            long millis = (System.nanoTime() - started) / 1_000_000;
+            long warn = Math.max(10, plugin.getConfig().getLong("diagnostics.slow-command-ms", 100));
+            if (millis >= warn) plugin.getLogger().warning("SLOW_COMMAND tq " + action + " " + millis + "ms (player=" + sender.getName() + ")");
+        }
+    }
+
+    private boolean executeTracked(CommandSender sender, String action, String[] args) {
         if (action.equals("help")) {
             say(sender, "Команды: /tq profile, /tq balance, /tq daily, /tq pay <ник> <сумма>, /tq spawn");
             say(sender, "Поселения: /tq town help, /tq claim, /tq unclaim, /tq claims, /tq trust, /tq untrust");

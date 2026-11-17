@@ -39,6 +39,6 @@ jobs:
         if: success()
         with:
           name: TalqoriaCore-dev
-          path: Файлы/plugin/target/talqoria-core-0.11.0.jar
+          path: Файлы/plugin/target/talqoria-core-0.13.0.jar
           if-no-files-found: error
           retention-days: 7
