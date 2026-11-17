@@ -1,0 +1,15 @@
+# Starter values only. Paper generates a complete server.properties on first boot.
+# Keep public servers authenticated and use whitelist for private testing.
+motd=TALQORIA | Developer Alpha
+online-mode=true
+white-list=true
+enforce-whitelist=true
+max-players=20
+difficulty=normal
+pvp=false
+spawn-protection=16
+view-distance=8
+simulation-distance=6
+enable-rcon=false
+enable-query=false
+enable-command-block=false
