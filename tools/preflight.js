@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 
-const VERSION = '0.11.0';
+const VERSION = '0.13.0';
 const LEVEL = { PASS: 0, WARN: 1, BLOCK: 2 };
 function readProperties(data) {
   const result = Object.create(null);
