@@ -1,0 +1,60 @@
+name: "Сообщить об ошибке"
+description: "Проблема с TalqoriaCore, сервером, сайтом или API"
+title: "[Ошибка] "
+body:
+  - type: markdown
+    attributes:
+      value: "Спасибо за сообщение! Перед отправкой удалите из логов токены, реальные IP-адреса и личные данные."
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Где возникла проблема?"
+      options:
+        - "Minecraft / TalqoriaCore"
+        - "Сайт"
+        - "Backend / API"
+        - "Сборка / GitHub Actions"
+        - "Другое"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: "Версия"
+      description: "Например: TalqoriaCore 0.13.0, Paper 26.3, Java 25"
+      placeholder: "TalqoriaCore ..., Paper ..., Java ..."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Как воспроизвести"
+      description: "Опишите действия по шагам."
+      placeholder: "1. Зашёл на сервер\n2. Выполнил команду...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Что должно было произойти"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Что произошло на самом деле"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Фрагмент лога (без личных данных)"
+      description: "Не публикуйте полный архив сервера или данные игроков."
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Перед отправкой"
+      options:
+        - label: "Проверил, что токены и персональные данные удалены"
+          required: true
