@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 echo ===========================================
-echo TALQORIA v0.11 - BUILD ENVIRONMENT CHECK
+echo TALQORIA v0.13 - BUILD ENVIRONMENT CHECK
  echo ===========================================
 where javac >nul 2>&1
 if errorlevel 1 (echo [FAIL] JDK not found. Install JDK 21 or newer. & goto :fail)
@@ -22,7 +22,7 @@ if exist "%LOCAL_MAVEN%" (
 where node >nul 2>&1
 if errorlevel 1 (echo [FAIL] Node.js not found. Install Node.js 20+. & goto :fail)
 node --version
-if not exist "server\paper.jar" (echo [NOTICE] Put a compatible compatible Paper 26.3 server jar in server\paper.jar.)
+if not exist "server\paper.jar" (echo [NOTICE] Put a compatible Paper server JAR in server\paper.jar.)
 if not exist "server\plugins\TalqoriaCore.jar" (echo [NOTICE] Plugin is not built yet. Run BUILD_PLUGIN_WINDOWS.bat.)
 echo [OK] Environment checked. Maven and Paper runtime still need a real build test.
 pause

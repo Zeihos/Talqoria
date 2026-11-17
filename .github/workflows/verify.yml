@@ -15,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify public repository structure and documentation
+        run: node tools/repo-check.js
       - name: Validate backend and website
         run: node --test backend/test/*.test.js
   plugin:
