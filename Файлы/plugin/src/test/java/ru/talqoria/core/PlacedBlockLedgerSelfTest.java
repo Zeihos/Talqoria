@@ -3,50 +3,70 @@ package ru.talqoria.core;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
 
-/** Self-contained regression tests; no Paper dependency needed. */
+/** Paper-independent persistence regression test. Run with Java 21+. */
 public final class PlacedBlockLedgerSelfTest {
-    private static void check(boolean ok, String message) {
-        if (!ok) throw new AssertionError(message);
+    private static void check(boolean value, String message) {
+        if (!value) throw new AssertionError(message);
     }
     public static void main(String[] args) throws Exception {
-        Path dir = Files.createTempDirectory("talqoria-ledger-");
+        Path dir = Files.createTempDirectory("talqoria-ledger-test-");
         try {
-            Path file = dir.resolve("placed-blocks.xml");
+            Path xml = dir.resolve("placed-blocks.xml");
+            Path journal = dir.resolve("placed-blocks.journal");
             UUID world = UUID.randomUUID();
             var a = new PlacedBlockLedger.Position(world, 1, 64, 1);
             var b = new PlacedBlockLedger.Position(world, 2, 64, 1);
             var c = new PlacedBlockLedger.Position(world, 3, 64, 1);
-            var other = new PlacedBlockLedger.Position(world, 4, 64, 1);
-            var ledger = new PlacedBlockLedger(file);
+            var d = new PlacedBlockLedger.Position(world, 4, 64, 1);
+            var ledger = new PlacedBlockLedger(xml);
             ledger.record(a);
             ledger.record(b);
             ledger.record(c);
-            check(ledger.consumeAll(List.of(a, a, b, other)) == 2, "batch deduplication");
-            check(ledger.size() == 1 && ledger.contains(c), "remaining state");
-            var reloaded = new PlacedBlockLedger(file);
-            check(reloaded.size() == 1 && reloaded.contains(c), "restart persistence");
-            check(reloaded.consumeAll(List.of(other)) == 0, "unknown positions");
-            check(reloaded.consumeAll(List.of(c)) == 1, "final removal");
-            check(new PlacedBlockLedger(file).size() == 0, "empty snapshot persisted");
-
-            Path bad = dir.resolve("unwritable.xml");
-            var failing = new PlacedBlockLedger(bad);
-            failing.record(a);
-            Files.delete(bad);
-            Files.createDirectory(bad);
+            check(Files.size(journal) > 0, "durable journal");
+            check(ledger.consumeAll(List.of(a, a, b, d)) == 2, "batch and dedupe");
+            check(ledger.contains(c) && ledger.size() == 1, "batch state");
+            var restarted = new PlacedBlockLedger(xml);
+            check(restarted.contains(c) && restarted.size() == 1, "restart replay");
+            check(restarted.consumeAll(List.of(d)) == 0, "unknown position no-op");
+            restarted.translate(List.of(c), 1, 0, 0);
+            check(!restarted.contains(c) && restarted.contains(d), "piston translation");
+            var recovered = new PlacedBlockLedger(xml);
+            check(recovered.contains(d), "piston replay");
+            recovered.checkpoint();
+            check(Files.size(journal) == 0, "checkpoint rotated journal");
+            check(new PlacedBlockLedger(xml).contains(d), "snapshot reload");
+            var pending = new PlacedBlockLedger(xml);
+            pending.record(a);
+            byte[] oldJournal = Files.readAllBytes(journal);
+            pending.checkpoint();
+            Files.write(journal, oldJournal);
+            var rerun = new PlacedBlockLedger(xml);
+            check(rerun.contains(a) && rerun.contains(d) && rerun.size() == 2,
+                "checkpoint interrupted before journal rotation");
+            rerun.checkpoint();
+            Files.writeString(journal, "badline\n", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            boolean corrupt = false;
+            try { new PlacedBlockLedger(xml); } catch (IOException e) { corrupt = true; }
+            check(corrupt, "invalid checksum rejected");
+            Files.writeString(journal, "cut-off", StandardOpenOption.TRUNCATE_EXISTING);
+            corrupt = false;
+            try { new PlacedBlockLedger(xml); } catch (IOException e) { corrupt = true; }
+            check(corrupt, "truncated journal rejected");
+            Files.delete(journal);
+            var locked = new PlacedBlockLedger(xml);
+            Files.createDirectory(journal);
             boolean failed = false;
-            try { failing.consumeAll(List.of(a)); }
-            catch (IOException expected) { failed = true; }
-            check(failed, "IO failure must propagate");
-            check(failing.contains(a), "IO failure must roll back memory");
-            System.out.println("PASS: ledger batching, restart, no-op and IO rollback");
+            try { locked.record(b); } catch (IOException e) { failed = true; }
+            check(failed && locked.isLocked() && !locked.contains(b), "write failure must lock");
+            System.out.println("PASS: WAL safety, replay, batch, translation, checkpoint, corruption and IO lockdown");
         } finally {
-            try (var paths = Files.walk(dir)) {
-                for (Path entry : paths.sorted(java.util.Comparator.reverseOrder()).toList())
-                    Files.deleteIfExists(entry);
+            try (var walk = Files.walk(dir)) {
+                for (Path p : walk.sorted(java.util.Comparator.reverseOrder()).toList())
+                    Files.deleteIfExists(p);
             }
         }
     }

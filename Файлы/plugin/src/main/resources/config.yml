@@ -1,4 +1,4 @@
-# TALQORIA v0.11 - restart server after changing configuration.
+# TALQORIA v0.13 - restart server after changing configuration.
 economy:
   starting-balance: 100
   daily-reward: 25
@@ -28,3 +28,8 @@ spawn-protection:
 # Alpha market is OFF until operator performs Paper testing and enables deliberately.
 market:
   enabled: false
+
+# Log slow actions to investigate tick stalls.
+diagnostics:
+  slow-command-ms: 100
+  slow-ledger-ms: 30

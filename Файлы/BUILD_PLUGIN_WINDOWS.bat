@@ -3,7 +3,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 echo ===========================================
-echo TALQORIA v0.11 - BUILD TalqoriaCore
+echo TALQORIA v0.13 - BUILD TalqoriaCore
  echo ===========================================
 
 where javac >nul 2>&1
@@ -72,13 +72,13 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "plugin\target\talqoria-core-0.11.0.jar" (
+if not exist "plugin\target\talqoria-core-0.13.0.jar" (
   echo [ERROR] Build returned success but the expected JAR is missing.
   pause
   exit /b 1
 )
 if not exist "server\plugins" mkdir "server\plugins"
-copy /Y "plugin\target\talqoria-core-0.11.0.jar" "server\plugins\TalqoriaCore.jar" >nul
+copy /Y "plugin\target\talqoria-core-0.13.0.jar" "server\plugins\TalqoriaCore.jar" >nul
 if errorlevel 1 (
   echo [ERROR] Built, but failed to copy JAR into server\plugins.
   pause
@@ -87,7 +87,7 @@ if errorlevel 1 (
 
 echo.
 echo [SUCCESS] TalqoriaCore.jar is now in server\plugins.
-echo [NEXT] Put compatible Paper 1.21.11 as server\paper.jar; then run server\start-windows.bat.
+echo [NEXT] Put compatible Paper for your Minecraft version as server\paper.jar; then run server\start-windows.bat.
 echo [NOTE] This does not mean Paper runtime tests have passed.
 pause
 exit /b 0

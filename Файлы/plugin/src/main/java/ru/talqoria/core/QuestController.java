@@ -21,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.GameMode;
 
@@ -62,14 +63,18 @@ final class QuestController implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
         if (locked || placed == null || !tracked(event.getBlockPlaced().getType())) return;
+        long started = System.nanoTime();
         try { placed.record(pos(event.getBlockPlaced())); }
         catch (IOException e) { failedProvenance(e); }
+        finally { plugin.traceLedger("place", started); }
     }
     private void moveBlocks(List<Block> blocks, BlockFace face) {
         if (locked || placed == null) return;
+        long started = System.nanoTime();
         try { placed.translate(blocks.stream().map(QuestController::pos).toList(),
             face.getModX(), face.getModY(), face.getModZ()); }
         catch (IOException e) { failedProvenance(e); }
+        finally { plugin.traceLedger("piston", started); }
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onExtend(BlockPistonExtendEvent e) { moveBlocks(e.getBlocks(), e.getDirection()); }
@@ -77,8 +82,10 @@ final class QuestController implements Listener {
     public void onRetract(BlockPistonRetractEvent e) { moveBlocks(e.getBlocks(), e.getDirection().getOppositeFace()); }
     private void removeExploded(List<Block> blocks) {
         if (locked || placed == null) return;
+        long started = System.nanoTime();
         try { placed.consumeAll(blocks.stream().map(QuestController::pos).toList()); }
         catch (IOException e) { failedProvenance(e); }
+        finally { plugin.traceLedger("explosion", started); }
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockExplosion(BlockExplodeEvent e) { removeExploded(e.blockList()); }
@@ -97,8 +104,10 @@ final class QuestController implements Listener {
         if (locked || !eligible(event.getPlayer())) return;
         Material m = event.getBlock().getType();
         if (placed != null) {
+            long started = System.nanoTime();
             try { if (placed.consume(pos(event.getBlock()))) return; }
             catch (IOException e) { failedProvenance(e); return; }
+            finally { plugin.traceLedger("break", started); }
         }
         QuestStore.Objective objective = switch (m) {
             case STONE, DEEPSLATE -> QuestStore.Objective.STONE;
@@ -186,5 +195,8 @@ final class QuestController implements Listener {
             return false;
         }
     }
+    /** Persist quest progress on disconnect rather than relying only on the timer. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) { saveIfDirty(); }
     void saveIfDirty() { if (dirty) persist(); }
 }
