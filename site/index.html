@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d14">
+  <meta name="description" content="TALQORIA — проект Minecraft Survival+ с экспедициями, поселениями и миром, который развивается вместе с игроками.">
+  <title>TALQORIA — создаём свой мир</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient--one" aria-hidden="true"></div>
+  <div class="ambient ambient--two" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="TALQORIA — на главную"><span class="brand-icon" aria-hidden="true"><span></span></span><span>TAL<span class="accent">Q</span>ORIA</span></a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Открыть меню">☰</button>
+    <nav id="nav-links" class="main-nav" aria-label="Главное меню">
+      <a data-nav href="#home">Главная</a>
+      <a data-nav href="#world">Игровой мир</a>
+      <a data-nav href="#guide">Как играть</a>
+      <a data-nav href="#market">Рынок</a>
+      <a data-nav href="#community">Сообщество</a>
+      <a data-nav href="#cabinet">Кабинет</a>
+      <a data-nav href="#staff">Панель команды</a>
+    </nav>
+    <button class="header-action" data-open-join>Как играть <span>↗</span></button>
+  </header>
+
+  <main>
+    <section class="page" id="page-home" data-page="home">
+      <div class="hero wrap">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="pulse"></span> ПРОЕКТ В РАЗРАБОТКЕ <span class="eyebrow-line"></span> MINECRAFT SURVIVAL+</div>
+          <h1>ТВОЯ ИСТОРИЯ.<br><span class="heading-alt">НАШ МИР.</span></h1>
+          <p class="lead">Строй поселения, отправляйся в экспедиции, развивай собственное дело и оставь след в истории Талкории.</p>
+          <div class="hero-buttons"><button class="btn btn-primary" data-open-join>Начать путешествие <span>↗</span></button><a href="#world" class="btn btn-secondary">Исследовать мир <span>→</span></a></div>
+          <div class="hero-foot"><div class="mini-label">СОСТОЯНИЕ ПРОЕКТА <strong>Разработка v0.13</strong></div><div class="mini-label">ПЛАТФОРМА <strong>Minecraft Java Edition</strong></div><div class="mini-label">ВХОД <strong>Без обязательных модов</strong></div></div>
+        </div>
+        <div class="hero-art" role="img" aria-label="Абстрактная концепция островного мира Талкории с башней и сияющим кристаллом">
+          <div class="art-backring"></div><div class="art-backring art-backring-two"></div>
+          <div class="art-moon"></div>
+          <div class="mountains mountains-back"></div><div class="mountains mountains-front"></div>
+          <div class="tower"><div class="tower-top"></div><div class="tower-light"></div></div>
+          <div class="floating-core"><span></span></div>
+          <div class="art-bottom"></div>
+          <div class="floating-plate plate-top"><span>01 — ОСНОВНОЙ МИР</span><strong>Survival+</strong></div>
+          <div class="floating-plate plate-bottom"><span>ЛЕТОПИСЬ ТАЛКОРИИ</span><strong>История начинается здесь</strong></div>
+        </div>
+      </div>
+      <div class="wrap livebar" aria-live="polite"><span class="livebar-pill">● &nbsp; СТАТУС СЕРВЕРА</span><strong data-live-status>Ожидаем подключение игрового сервера</strong><span data-live-online>Онлайн: —</span><small data-live-version>В разработке</small></div>
+      <section class="wrap content-section">
+        <div class="section-intro"><div><div class="overline">КОНЦЕПЦИЯ / 001</div><h2>Больше, чем просто выживание</h2></div><p>В основе — привычный Minecraft. Вокруг — честная экономика, исследования и истории, созданные самими игроками.</p></div>
+        <div class="feature-grid">
+          <article class="feature-card"><div class="feature-index">01 / ОСНОВА</div><div class="feature-symbol">⌂</div><h3>Создавай своё</h3><p>Выбирай место для дома, объединяйся с друзьями и развивай поселение.</p><a href="#world">Узнать больше ↗</a></article>
+          <article class="feature-card"><div class="feature-index">02 / ПРИКЛЮЧЕНИЯ</div><div class="feature-symbol">◇</div><h3>Исследуй мир</h3><p>Путешествуй по регионам, проходи экспедиции и находи реликвии.</p><a href="#world">Узнать больше ↗</a></article>
+          <article class="feature-card"><div class="feature-index">03 / СООБЩЕСТВО</div><div class="feature-symbol">⚑</div><h3>Влияй на историю</h3><p>Торгуй, участвуй в событиях и меняй жизнь Талкории вместе с другими.</p><a href="#community">Узнать больше ↗</a></article>
+        </div>
+      </section>
+      <section class="wrap timeline-section"><div class="section-intro"><div><div class="overline">ПЛАН / 002</div><h2>Путь к открытию</h2></div><p>Не обещаем дату запуска до готовности стабильной сборки. Сначала игровой фундамент и закрытое тестирование.</p></div><div class="timeline"><div class="timeline-item current"><span class="timeline-dot"></span><small>ЭТАП 01</small><strong>Архитектура и прототип</strong><p>Механики, сайт, структура инфраструктуры.</p></div><div class="timeline-item"><span class="timeline-dot"></span><small>ЭТАП 02</small><strong>Игровое ядро</strong><p>Спавн, выживание, защита, экономика.</p></div><div class="timeline-item"><span class="timeline-dot"></span><small>ЭТАП 03</small><strong>Закрытое тестирование</strong><p>Баланс, нагрузка, безопасность, ошибки.</p></div><div class="timeline-item"><span class="timeline-dot"></span><small>ЭТАП 04</small><strong>Публичное открытие</strong><p>Только после прохождения тестов.</p></div></div></section>
+    </section>
+
+    <section class="page" id="page-world" data-page="world" hidden>
+      <div class="wrap inner-hero"><div class="overline">МИР / 001</div><h1>ОТКРОЙ <span class="heading-alt">ТАЛКОРИЮ</span></h1><p class="lead">Единый мир, где исследование и строительство дополняют друг друга, а прогресс не покупается за деньги.</p></div>
+      <div class="wrap world-layout"><div class="world-map"><div class="map-grid"></div><div class="map-compass">N<br>↑</div><div class="map-marker marker-a" title="Столица: Площадь Навигаторов">✦<span>СТОЛИЦА</span></div><div class="map-marker marker-b" title="Порт экспедиций">◇<span>ЭКСПЕДИЦИИ</span></div><div class="map-marker marker-c" title="Торговый квартал">◆<span>ТОРГОВЛЯ</span></div><div class="map-marker marker-d" title="Дикие земли">✳<span>ДИКИЕ ЗЕМЛИ</span></div><div class="map-watermark">СХЕМА МИРА · КОНЦЕПТ</div></div><div class="world-details"><div class="overline">УСТРОЙСТВО МИРА</div><h2>Один сервер.<br>Много путей.</h2><p>Начни на безопасном спавне, освой основные команды, выбери точку для поселения. Хочешь приключений — отправляйся на вылазки в руины. Предпочитаешь мирную игру — строй, торгуй и создавай город.</p><div class="world-list"><div><b>01</b><span><strong>Столица</strong><small>Спавн, справка, стартовые задания</small></span></div><div><b>02</b><span><strong>Дикие земли</strong><small>Выживание, строительство, участки</small></span></div><div><b>03</b><span><strong>Экспедиции</strong><small>Кооперативные события и награды</small></span></div><div><b>04</b><span><strong>Торговля</strong><small>Магазины игроков и рынок</small></span></div></div></div></div>
+      <section class="wrap content-section"><div class="section-intro"><div><div class="overline">ИГРОВЫЕ СИСТЕМЫ / 002</div><h2>Что будет в первой версии</h2></div><p>Сначала цельная основа — потом крупные обновления.</p></div><div class="system-grid"><div><span>01</span><h3>Приват территорий</h3><p>Альфа-система чанковых участков для поселений и доверенных игроков.</p></div><div><span>02</span><h3>Экономика</h3><p>Заработок игровым трудом, сделки между игроками и расходы на сервисы.</p></div><div><span>03</span><h3>Поселения</h3><p>Совместное строительство, роли участников и развитие базы.</p></div><div><span>04</span><h3>Экспедиции</h3><p>Задания, исследование руин и сезонные совместные активности.</p></div><div><span>05</span><h3>Достижения</h3><p>Прогресс за реальные игровые действия, а не за покупки.</p></div><div><span>06</span><h3>Безопасность</h3><p>Журналы действий, проверяемые наказания и система обращений.</p></div></div></section>
+    </section>
+
+    <section class="page" id="page-guide" data-page="guide" hidden>
+      <div class="wrap inner-hero"><div class="overline">ГАЙД / ТЕСТОВАЯ АЛЬФА 0.8</div><h1>НАЧНИ <span class="heading-alt">СВОЙ ПУТЬ</span></h1><p class="lead">В исходниках альфа-сборки реализованы поселения с офицерами, приваты, экономика и задания с защитой от некоторых способов фарма. Это описание разработанных команд, а не обещание открытого сервера. В v0.13 введены проверки готовности сервера к закрытому тесту; рынок по-прежнему отключён.</p></div>
+      <div class="wrap guide-notice">⌛ Сейчас проект находится на этапе технического тестирования. IP, публичная регистрация и подключение новых игроков ещё не доступны.</div>
+      <div class="wrap guide-grid">
+        <article class="guide-panel"><span class="feature-index">01 / ПОСЕЛЕНИЯ</span><h2>Объединяйтесь</h2><p>Создай поселение, пригласи друга и стройте вместе. Все участники могут строить, а основатель назначает офицеров для управления участками и приглашениями.</p><div class="guide-cmd"><code>/tq town create Название</code><small>Создать поселение</small></div><div class="guide-cmd"><code>/tq town invite Ник</code><small>Пригласить игрока онлайн на 5 минут</small></div><div class="guide-cmd"><code>/tq town accept</code><small>Принять приглашение</small></div><div class="guide-cmd"><code>/tq town info</code><small>Сведения и твоя роль</small></div><div class="guide-cmd"><code>/tq town promote Ник</code><small>Назначить офицера (только владелец)</small></div><div class="guide-cmd"><code>/tq town demote Ник</code><small>Снять офицера (только владелец)</small></div></article>
+        <article class="guide-panel"><span class="feature-index">02 / ПРИВАТЫ</span><h2>Защити постройки</h2><p>Участки выделяются по чанкам 16 × 16 блоков. Лимит начинается с 8 чанков и растёт с уровнем поселения. Команды изменения участков доступны владельцу и офицерам.</p><div class="guide-cmd"><code>/tq claim</code><small>Защитить чанк, где ты стоишь</small></div><div class="guide-cmd"><code>/tq unclaim</code><small>Снять защиту чанка</small></div><div class="guide-cmd"><code>/tq claims</code><small>Посмотреть координаты участков</small></div><div class="guide-cmd"><code>/tq trust Ник</code><small>Разрешить строительство гостю</small></div><div class="guide-cmd"><code>/tq untrust Ник</code><small>Отозвать доступ</small></div></article>
+        <article class="guide-panel"><span class="feature-index">03 / ЭКОНОМИКА</span><h2>Первый капитал</h2><p>Монеты можно заработать заданиями, а затем покупать или продавать обычные ресурсы через тестовый серверный магазин. Аукцион игроков ещё не реализован.</p><div class="guide-cmd"><code>/tq balance</code><small>Проверить баланс</small></div><div class="guide-cmd"><code>/tq daily</code><small>Получить 25 тестовых монет раз в сутки (UTC)</small></div><div class="guide-cmd"><code>/tq pay Ник Сумма</code><small>Перевести монеты игроку онлайн</small></div><div class="guide-cmd"><code>/tq shop</code><small>Каталог товаров и цен</small></div><div class="guide-cmd"><code>/tq shop buy bread 4</code><small>Купить четыре хлеба</small></div><div class="guide-cmd"><code>/tq shop sell iron 2</code><small>Продать два обычных железных слитка</small></div></article>
+        <article class="guide-panel"><span class="feature-index">04 / ЕЖЕДНЕВНЫЕ ЗАДАНИЯ</span><h2>Зарабатывай исследованием</h2><p>Три задания обновляются ежедневно в 00:00 UTC. Учитываются естественно появившиеся зомби и блоки, не поставленные игроками; обработчики ещё проходят тестирование. Награду нужно забрать вручную.</p><div class="guide-cmd"><code>/tq quest</code><small>Посмотреть прогресс по заданиям</small></div><div class="guide-cmd"><code>/tq quest claim miner</code><small>48 блоков камня → 40 монет</small></div><div class="guide-cmd"><code>/tq quest claim lumber</code><small>24 бревна → 50 монет</small></div><div class="guide-cmd"><code>/tq quest claim hunter</code><small>8 зомби → 70 монет</small></div></article>
+        <article class="guide-panel"><span class="feature-index">05 / РОСТ ПОСЕЛЕНИЙ</span><h2>Развивайте поселение</h2><p>За выполнение заданий участниками поселение получает влияние. Уровни от 1 до 5 расширяют лимит приватов до 16 чанков.</p><div class="guide-cmd"><code>/tq town info</code><small>Уровень, влияние и текущий лимит</small></div><div class="guide-cmd"><code>/tq claims</code><small>Участки и доступный лимит</small></div></article>
+        <article class="guide-panel"><span class="feature-index">06 / ЗАЩИТА СПАВНА</span><h2>Безопасная столица</h2><p>Квадрат радиусом 64 блока вокруг установленного спавна защищён от строительства, взрывов и PvP. Параметр меняется в config.yml.</p><div class="guide-cmd"><code>/tq spawn</code><small>Телепортация к точке возрождения</small></div><div class="guide-cmd"><code>/tq setspawn</code><small>Назначение точки только для администрации</small></div></article>
+        <article class="guide-panel"><span class="feature-index">07 / ПУТЬ НОВИЧКА</span><h2>Три первых шага</h2><p>Разовые награды за путешествие, вступление в поселение и первый приват. Награды можно получить только один раз на игрока.</p><div class="guide-cmd"><code>/tq journey</code><small>Проверить доступные цели</small></div><div class="guide-cmd"><code>/tq journey claim explore</code><small>256 блоков от спавна → +60 монет</small></div><div class="guide-cmd"><code>/tq journey claim settle</code><small>Вступить в поселение → +90 монет</small></div><div class="guide-cmd"><code>/tq journey claim protect</code><small>Приват поселения → +130 монет</small></div></article>
+      </div>
+      <div class="wrap notice notice-wide">Защита пока проходит техническое тестирование и не является завершённым антигрифом. Перечень команд и ограничения могут измениться до запуска.</div>
+    </section>
+
+    <section class="page" id="page-market" data-page="market" hidden>
+      <div class="wrap inner-hero"><div class="overline">РЫНОК / ALPHA 0.13</div><h1>ЧЕСТНАЯ <span class="heading-alt">ТОРГОВЛЯ</span></h1><p class="lead">Первые товары экономической системы TALQORIA. Цены пока тестовые, а сделки выполняются только внутри Minecraft.</p></div>
+      <div class="wrap marketplace-intro"><div><span class="feature-index">КОМАНДА</span><h2>/tq shop</h2><p>Открой каталог прямо в игре. В Developer Alpha покупки и продажи выключены по умолчанию и остаются недоступными до полного тестирования транзакций.</p></div><div><span class="feature-index">ПОЛУЧЕНИЕ МОНЕТ</span><h2>Задания и путешествия</h2><p>Зарабатывай монеты за ежедневные задания, исследование мира и развитие поселения.</p></div></div>
+      <div class="wrap market-data-head"><h2>Каталог товаров</h2><span>ЦЕНЫ ИЗ API · МОНЕТЫ ЗА 1 ШТ.</span></div>
+      <div class="wrap market-table" id="market-catalog" aria-live="polite"><div class="notice">Загружаем цены…</div></div>
+      <div class="wrap market-help"><div><span>01</span><code>/tq shop buy bread 4</code><small>Купить 4 хлеба за 56 монет</small></div><div><span>02</span><code>/tq shop sell iron 2</code><small>Продать 2 железных слитка за 24 монеты</small></div><div><span>03</span><code>/tq journey</code><small>Открыть путь новичка и разовые награды</small></div></div>
+      <div class="wrap guide-notice">Тестовый каталог v0.13: это не магазин с оплатой реальными деньгами. Сделки по умолчанию выключены. Журнал фиксирует незавершённую операцию и блокирует торговлю до проверки администратором. Инвентарь и монеты пока не имеют общей транзакции.</div>
+    </section>
+
+    <section class="page" id="page-community" data-page="community" hidden>
+      <div class="wrap inner-hero"><div class="overline">СООБЩЕСТВО / 001</div><h1>ПОСТРОИМ <span class="heading-alt">ВМЕСТЕ</span></h1><p class="lead">Новости разработки, правила и обсуждения появятся здесь. Это прототип будущего сообщества.</p></div>
+      <div class="wrap community-layout"><div class="community-main"><div class="section-minihead">ДНЕВНИК РАЗРАБОТКИ <span>ДАННЫЕ ИЗ API</span></div><div id="live-news" class="live-news" aria-live="polite"><div class="notice">Загрузка новостей…</div></div><div class="section-minihead topic-heading">БУДУЩИЙ ФОРУМ <span>ПРОТОТИП</span></div><div class="topic"><div class="topic-icon">✦</div><div><strong>Добро пожаловать в TALQORIA</strong><p>Идея проекта и этапы разработки</p></div><span>Закреплено</span></div><div class="topic"><div class="topic-icon">⌂</div><div><strong>Предложения по игровому миру</strong><p>Какие механики хотелось бы видеть?</p></div><span>Концепт</span></div><div class="topic"><div class="topic-icon">⚑</div><div><strong>Правила и обращения</strong><p>Раздел будет открыт до публичного запуска</p></div><span>Планируется</span></div><div class="notice">Темы выше — макеты. Публикация тем, ответы и модерация форума пока не реализованы.</div></div><aside class="community-aside"><div class="card-overline">ПРОЕКТ / СТАТУС</div><div class="status-dotline"><span class="pulse"></span><strong>В разработке</strong></div><p>Данные онлайна обновляются через API только при подключении игрового сервера. IP появится перед закрытым тестом.</p><div class="thin-rule"></div><div class="card-overline">РАЗДЕЛЫ В ПЛАНЕ</div><ul><li>Новости проекта</li><li>Общие обсуждения</li><li>Предложения</li><li>Жалобы и апелляции</li><li>Набор в команду</li></ul></aside></div>
+    </section>
+
+    <section class="page" id="page-cabinet" data-page="cabinet" hidden>
+      <div class="wrap inner-hero"><div class="overline">ЛИЧНЫЙ КАБИНЕТ / КОНЦЕПТ</div><h1>ТВОЙ <span class="heading-alt">ПРОФИЛЬ</span></h1><p class="lead">В будущем здесь будут игровые достижения, история экспедиций, управление настройками и обращения.</p></div>
+      <div class="wrap dashboard"><div class="profile-card"><div class="avatar-demo">?</div><div><small>ИГРОВОЙ АККАУНТ</small><h2>Не привязан</h2><p>Для входа понадобится безопасная привязка Minecraft-аккаунта через одноразовый код в игре.</p><button class="btn btn-primary disabled" disabled title="Функция ещё в разработке">Привязка появится позже</button></div></div><div class="stat-card"><small>ИГРОВОЕ ВРЕМЯ</small><strong>—</strong><span>После подключения API</span></div><div class="stat-card"><small>РЕПУТАЦИЯ</small><strong>—</strong><span>После подключения API</span></div><div class="stat-card"><small>ПОСЕЛЕНИЕ</small><strong>—</strong><span>После подключения API</span></div></div><div class="wrap notice notice-wide">Это демонстрация интерфейса. Реального входа, хранения пользовательских данных и привязки аккаунта в этой версии нет.</div>
+    </section>
+
+    <section class="page" id="page-staff" data-page="staff" hidden>
+      <div class="wrap inner-hero"><div class="overline">КОМАНДА / ПАНЕЛЬ — ПРОТОТИП</div><h1>УПРАВЛЕНИЕ <span class="heading-alt">ПРОЕКТОМ</span></h1><p class="lead">Так будет устроено единое рабочее место администрации, модерации и технической команды.</p></div>
+      <div class="wrap staff-layout"><aside class="staff-sidebar"><span>РАЗДЕЛЫ</span><div class="active">▧ &nbsp; Обзор</div><div>◈ &nbsp; Обращения</div><div>⚑ &nbsp; Наказания</div><div>⌘ &nbsp; Игроки</div><div>⌁ &nbsp; События</div><div>☷ &nbsp; Журналы</div><small>Разделы показаны без функций.</small></aside><div class="staff-main"><div class="staff-alert">⚠ ДЕМО-ИНТЕРФЕЙС · Нет доступа к реальному серверу и данным игроков.</div><div class="staff-stats"><div><small>ОНЛАЙН</small><strong data-online-staff>—</strong><span data-staff-connection>Сервер не подключён</span></div><div><small>ОТКРЫТЫЕ ОБРАЩЕНИЯ</small><strong>—</strong><span>API не подключён</span></div><div><small>СОСТОЯНИЕ СЕРВЕРА</small><strong class="smaller" data-staff-status>Нет данных</strong><span>Ожидается интеграция</span></div></div><div class="staff-table"><div class="table-head">БУДУЩИЕ МОДУЛИ <span>ПРОЕКТИРУЮТСЯ</span></div><div><strong>RBAC и 2FA</strong><span>Доступ строго по роли</span><em>Нужно сделать</em></div><div><strong>История наказаний</strong><span>Причина, срок, автор, обжалование</span><em>Нужно сделать</em></div><div><strong>Аудит действий</strong><span>Журнал без тихого удаления</span><em>Нужно сделать</em></div><div><strong>Операции с сервером</strong><span>Только через защищённый backend</span><em>Нужно сделать</em></div></div></div></div>
+    </section>
+  </main>
+
+  <footer class="footer wrap"><div class="footer-brand">TAL<span>Q</span>ORIA <small>СОЗДАЁМ МИР ВМЕСТЕ</small></div><div class="footer-right"><span>Независимый игровой проект. Не является официальным продуктом Mojang или Microsoft.</span><span>© <span id="year">2026</span> TALQORIA · Сайт и API v0.13</span></div></footer>
+
+  <dialog id="join-dialog" class="join-dialog"><button class="close-modal" aria-label="Закрыть" data-close-dialog>✕</button><div class="overline">TALQORIA / ПОДКЛЮЧЕНИЕ</div><h2>Готовим открытие</h2><p>Сервер пока находится в разработке. Адрес подключения и совместимая версия Minecraft будут опубликованы перед тестированием.</p><div class="join-step"><span>01</span><div><strong>Следи за разработкой</strong><small>Новости появятся в разделе «Сообщество».</small></div></div><div class="join-step"><span>02</span><div><strong>Получи адрес сервера</strong><small>IP будет указан после запуска тестового сервера.</small></div></div><div class="join-step"><span>03</span><div><strong>Заходи в Minecraft</strong><small>Выбери «Сетевая игра» → «Добавить сервер».</small></div></div><button class="btn btn-primary modal-action" data-close-dialog>Понятно</button></dialog>
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,22 +1,24 @@
 name: Verify Talqoria
 on:
   push:
-    branches: [main, 'dev/**']
+    branches: [main, 'dev/**', 'chore/**']
   pull_request:
     branches: [main]
 permissions:
   contents: read
 jobs:
   backend:
+    name: Node.js API and site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Backend tests
-        run: node --test 'Файлы/backend/test/server.test.js'
+      - name: Validate backend and website
+        run: node --test backend/test/*.test.js
   plugin:
+    name: Java storage and Paper API build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,20 +27,19 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-          cache-dependency-path: 'Файлы/plugin/pom.xml'
-      - name: Pure Java storage tests
+          cache-dependency-path: plugin/pom.xml
+      - name: Pure Java provenance regression tests
         run: |
           mkdir -p "$RUNNER_TEMP/talqoria-ledger-test"
           javac --release 21 -d "$RUNNER_TEMP/talqoria-ledger-test" \
-            'Файлы/plugin/src/main/java/ru/talqoria/core/PlacedBlockLedger.java' \
-            'Файлы/plugin/src/test/java/ru/talqoria/core/PlacedBlockLedgerSelfTest.java'
+            plugin/src/main/java/ru/talqoria/core/PlacedBlockLedger.java \
+            plugin/src/test/java/ru/talqoria/core/PlacedBlockLedgerSelfTest.java
           java -cp "$RUNNER_TEMP/talqoria-ledger-test" ru.talqoria.core.PlacedBlockLedgerSelfTest
-      - name: Compile TalqoriaCore with Paper API
-        run: mvn -B -ntp -f 'Файлы/plugin/pom.xml' clean package
+      - name: Build plugin using real Paper API
+        run: mvn -B -ntp -f plugin/pom.xml clean package
       - uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: TalqoriaCore-dev
-          path: Файлы/plugin/target/talqoria-core-0.13.0.jar
-          if-no-files-found: error
+          path: plugin/target/talqoria-core-0.13.0.jar
           retention-days: 7
+          if-no-files-found: error
