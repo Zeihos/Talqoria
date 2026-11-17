@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 
-const VERSION = '0.13.0';
+const VERSION = '0.14.0';
 const LEVEL = { PASS: 0, WARN: 1, BLOCK: 2 };
 function readProperties(data) {
   const result = Object.create(null);
@@ -134,6 +134,32 @@ function check(root) {
       record('WARN', `${label}_BACKUP`, `${file} без .bak — сохраните офлайн-копию после остановки`);
     else record('PASS', `${label}_RECOVERY`, `${file} ещё не создан (допустимо для нового сервера)`);
   }
+  // Missing primary plus backup means recovery, not new anti-farm state.
+  const blocksXml = 'plugins/TalqoriaCore/placed-blocks.xml';
+  const blocksBak = blocksXml + '.bak';
+  const blocksJournal = 'plugins/TalqoriaCore/placed-blocks.journal';
+  if (!exists(blocksXml) && exists(blocksBak))
+    record('BLOCK', 'PLACED_LEDGER_RECOVERY', 'Основной placed-blocks.xml отсутствует при наличии .bak; нужна ручная сверка');
+  else if (exists(blocksXml) && fs.statSync(path.join(server, blocksXml)).size === 0)
+    record('BLOCK', 'PLACED_LEDGER_RECOVERY', 'Основной placed-blocks.xml пуст: сначала восстановите данные');
+  else if (exists(blocksXml))
+    record('PASS', 'PLACED_LEDGER_RECOVERY', 'Снимок placed-blocks.xml найден; содержимое проверит офлайн-инспектор');
+  else record('PASS', 'PLACED_LEDGER_RECOVERY', 'Контрольный снимок ещё не создан');
+  if (exists(blocksJournal)) {
+    const journalPath = path.join(server, blocksJournal);
+    const stat = fs.statSync(journalPath);
+    if (!stat.isFile() || stat.size > 128 * 1024 * 1024)
+      record('BLOCK', 'BLOCK_JOURNAL', 'Журнал блоков повреждён или превышает 128 МБ; нужна офлайн-проверка');
+    else if (stat.size > 0) {
+      const fd = fs.openSync(journalPath, 'r');
+      let tail;
+      try { const byte = Buffer.alloc(1); fs.readSync(fd, byte, 0, 1, stat.size - 1); tail = byte[0]; }
+      finally { fs.closeSync(fd); }
+      record(tail === 10 ? 'WARN' : 'BLOCK', 'BLOCK_JOURNAL',
+        tail === 10 ? 'Журнал блоков существует; CRC проверяет офлайн-инспектор'
+                    : 'Журнал блоков обрывается без перевода строки; нужна офлайн-проверка');
+    } else record('PASS', 'BLOCK_JOURNAL', 'Журнал блоков пуст');
+  } else record('PASS', 'BLOCK_JOURNAL', 'Журнал блоков пока отсутствует');
   if (exists('plugins/TalqoriaCore/market-pending.xml')) record('BLOCK', 'MARKET_PENDING', 'Найдена незавершённая сделка — необходима ручная сверка, не удаляйте файл');
   else record('PASS', 'MARKET_PENDING', 'Незавершённая сделка не обнаружена (это не проверка целостности кошельков)');
   // For the conservative alpha, trades are blocked even when the operator deliberately enables them.
