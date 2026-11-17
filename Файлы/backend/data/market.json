@@ -1,0 +1,7 @@
+[
+  {"id":"cobble","name":"Булыжник","material":"COBBLESTONE","buy":3,"sell":1},
+  {"id":"oak","name":"Дубовые брёвна","material":"OAK_LOG","buy":9,"sell":3},
+  {"id":"bread","name":"Хлеб","material":"BREAD","buy":14,"sell":5},
+  {"id":"iron","name":"Железный слиток","material":"IRON_INGOT","buy":32,"sell":12},
+  {"id":"torch","name":"Факел","material":"TORCH","buy":4,"sell":1}
+]

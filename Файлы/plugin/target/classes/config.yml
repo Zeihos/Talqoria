@@ -1,0 +1,30 @@
+# TALQORIA v0.11 - restart server after changing configuration.
+economy:
+  starting-balance: 100
+  daily-reward: 25
+  max-transfer: 1000000
+claims:
+  max-chunks-per-town: 8
+  max-members: 8
+  max-guests: 16
+  # Empty means any world. Add [world] to restrict it to overworld only.
+  allowed-worlds: []
+  # Square spawn exclusion radius, in blocks. Does not create a spawn claim.
+  spawn-protection-radius-blocks: 128
+messages:
+  welcome: true
+integration:
+  enabled: false
+  endpoint: 'http://127.0.0.1:8080/api/internal/heartbeat'
+  interval-ticks: 400
+spawn-protection:
+  # Protects the square around /tq setspawn from edits, grief and PvP.
+  enabled: true
+  radius-blocks: 64
+
+# Fixed test-market prices are defined in MarketCatalog.java.
+# Do not expose the alpha shop to the public before transaction/recovery testing.
+
+# Alpha market is OFF until operator performs Paper testing and enables deliberately.
+market:
+  enabled: false

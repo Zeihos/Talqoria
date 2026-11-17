@@ -1,0 +1,12 @@
+{
+  "name": "talqoria-backend",
+  "version": "0.11.0",
+  "private": true,
+  "description": "TALQORIA site and private Paper status bridge",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
