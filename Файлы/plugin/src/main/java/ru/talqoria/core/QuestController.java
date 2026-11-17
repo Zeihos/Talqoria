@@ -77,7 +77,7 @@ final class QuestController implements Listener {
     public void onRetract(BlockPistonRetractEvent e) { moveBlocks(e.getBlocks(), e.getDirection().getOppositeFace()); }
     private void removeExploded(List<Block> blocks) {
         if (locked || placed == null) return;
-        try { for (Block b : blocks) placed.consume(pos(b)); }
+        try { placed.consumeAll(blocks.stream().map(QuestController::pos).toList()); }
         catch (IOException e) { failedProvenance(e); }
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

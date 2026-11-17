@@ -35,6 +35,30 @@ public final class PlacedBlockLedger {
         catch (IOException e) { placed.add(pos); throw e; }
         return true;
     }
+    /**
+     * Removes all player-placed blocks destroyed in one explosion with a single
+     * durable snapshot write. Unknown and duplicate positions are ignored.
+     * On write failure, memory is rolled back; the caller must lock quests.
+     *
+     * @return number of tracked positions removed
+     */
+    public int consumeAll(java.util.Collection<Position> positions) throws IOException {
+        java.util.Objects.requireNonNull(positions, "positions");
+        Set<Position> removed = new HashSet<>();
+        for (Position pos : positions) {
+            if (pos == null) throw new IllegalArgumentException("null position");
+            if (placed.contains(pos)) removed.add(pos);
+        }
+        if (removed.isEmpty()) return 0;
+        placed.removeAll(removed);
+        try { save(); }
+        catch (IOException failure) {
+            placed.addAll(removed);
+            throw failure;
+        }
+        return removed.size();
+    }
+
     /** Moves provenance when pistons relocate tracked blocks. */
     public void translate(java.util.Collection<Position> origins, int dx, int dy, int dz) throws IOException {
         Set<Position> moving = new HashSet<>();

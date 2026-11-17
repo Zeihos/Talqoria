@@ -1,0 +1,32 @@
+# Compiled output and developer tooling. Already tracked files require separate cleanup.
+**/target/
+**/.tools/
+**/node_modules/
+**/test-classes/
+**/*.class
+**/*.tmp
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+
+# Paper runtime, player data and worlds are not source code.
+Файлы/server/world/
+Файлы/server/world_nether/
+Файлы/server/world_the_end/
+Файлы/server/logs/
+Файлы/server/plugins/
+Файлы/server/ops.json
+Файлы/server/whitelist.json
+Файлы/server/usercache.json
+Файлы/server/banned-ips.json
+Файлы/server/banned-players.json
+Файлы/server/server.properties
+Файлы/server/session.lock
+**/players.yml*
+**/territories.xml*
+**/quests.xml*
+**/placed-blocks.xml*
+**/placed-blocks.journal*
+**/market-pending.xml*
+**/staff-audit.tsv*

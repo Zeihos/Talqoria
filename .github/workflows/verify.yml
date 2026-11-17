@@ -1,0 +1,44 @@
+name: Verify Talqoria
+on:
+  push:
+    branches: [main, 'dev/**']
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Backend tests
+        run: node --test 'Файлы/backend/test/server.test.js'
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: 'Файлы/plugin/pom.xml'
+      - name: Pure Java storage tests
+        run: |
+          mkdir -p "$RUNNER_TEMP/talqoria-ledger-test"
+          javac --release 21 -d "$RUNNER_TEMP/talqoria-ledger-test" \
+            'Файлы/plugin/src/main/java/ru/talqoria/core/PlacedBlockLedger.java' \
+            'Файлы/plugin/src/test/java/ru/talqoria/core/PlacedBlockLedgerSelfTest.java'
+          java -cp "$RUNNER_TEMP/talqoria-ledger-test" ru.talqoria.core.PlacedBlockLedgerSelfTest
+      - name: Compile TalqoriaCore with Paper API
+        run: mvn -B -ntp -f 'Файлы/plugin/pom.xml' clean package
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: TalqoriaCore-dev
+          path: Файлы/plugin/target/talqoria-core-0.11.0.jar
+          if-no-files-found: error
+          retention-days: 7
