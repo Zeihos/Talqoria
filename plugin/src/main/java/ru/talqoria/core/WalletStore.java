@@ -69,28 +69,45 @@ public final class WalletStore {
         }
     }
 
-    /** Player records never get deleted by this plugin; loss of a prior account is suspicious. */
+    /**
+     * A valid primary snapshot may contain newer balances, payouts and players, but it
+     * must never forget proof of an already-claimed reward or move daily timestamps
+     * backwards compared with the previous durable backup. Otherwise an operator
+     * restoring a stale/corrupted file could trigger duplicate grants after restart.
+     */
     private void validateAgainstBackup(Path backup) throws IOException, InvalidConfigurationException {
         if (!Files.exists(backup)) return;
         YamlConfiguration previous = new YamlConfiguration();
         previous.load(backup.toFile());
+        validate(previous);
         for (String key : previous.getKeys(true)) {
             if (key.matches("players\\.[^.]+\\.balance") && !data.contains(key))
                 throw new IOException("Primary snapshot is missing player " + key + " present in backup");
+            if (key.matches("players\\.[^.]+\\.lastDaily")) {
+                Number oldDay = (Number) previous.get(key);
+                Object newDay = data.get(key);
+                if (!(newDay instanceof Number currentDay) || currentDay.longValue() < oldDay.longValue())
+                    throw new IOException("Daily reward watermark moved backwards or disappeared: " + key);
+            }
+            if (key.matches("players\\.[^.]+\\.rewards\\.[a-zA-Z0-9_-]{1,120}") &&
+                    Boolean.TRUE.equals(previous.get(key)) && !Boolean.TRUE.equals(data.get(key)))
+                throw new IOException("Paid reward receipt is missing in primary: " + key);
         }
     }
 
-    /** Validate recognized wallet fields instead of accepting YAML defaults as legitimate balances. */
-    private void validate() throws IOException {
+    /** Validate primary and backup equally strictly before comparing receipts. */
+    private void validate() throws IOException { validate(data); }
+
+    private static void validate(YamlConfiguration snapshot) throws IOException {
         java.util.Set<String> playerIds = new java.util.HashSet<>();
-        for (String path : data.getKeys(true)) {
+        for (String path : snapshot.getKeys(true)) {
             if (!path.startsWith("players.")) continue;
             String[] parts = path.split("\\.");
             if (parts.length < 3) continue; // section names in Bukkit's real YamlConfiguration
             try { UUID.fromString(parts[1]); }
             catch (IllegalArgumentException invalid) { throw new IOException("Invalid wallet UUID in " + path, invalid); }
             playerIds.add(parts[1]);
-            Object value = data.get(path);
+            Object value = snapshot.get(path);
             if (parts.length == 3 && (parts[2].equals("balance") || parts[2].equals("lastDaily"))) {
                 if (!(value instanceof Number n) || n.doubleValue() != n.longValue()
                         || (parts[2].equals("balance") && n.longValue() < 0)
@@ -104,7 +121,7 @@ public final class WalletStore {
             }
         }
         for (String id : playerIds) {
-            if (!data.contains("players." + id + ".balance"))
+            if (!snapshot.contains("players." + id + ".balance"))
                 throw new IOException("Missing player balance for " + id);
         }
     }
@@ -217,7 +234,21 @@ public final class WalletStore {
             try (FileChannel channel = FileChannel.open(temp, StandardOpenOption.WRITE)) {
                 channel.force(true);
             }
-            if (Files.exists(file)) Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
+            if (Files.exists(file)) {
+                // Do not truncate a previously valid .bak during an interrupted copy.
+                Path backupTemp = Files.createTempFile(file.getParent(), "players-backup-", ".tmp");
+                try {
+                    Files.copy(file, backupTemp, StandardCopyOption.REPLACE_EXISTING);
+                    try (FileChannel channel = FileChannel.open(backupTemp, StandardOpenOption.WRITE)) {
+                        channel.force(true);
+                    }
+                    try {
+                        Files.move(backupTemp, backupPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (AtomicMoveNotSupportedException unsupported) {
+                        Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } finally { Files.deleteIfExists(backupTemp); }
+            }
             try {
                 Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             } catch (AtomicMoveNotSupportedException unsupported) {
