@@ -1,4 +1,4 @@
-# TALQORIA v0.14 - restart server after changing configuration.
+# TALQORIA v0.15 - restart server after changing configuration.
 economy:
   starting-balance: 100
   daily-reward: 25

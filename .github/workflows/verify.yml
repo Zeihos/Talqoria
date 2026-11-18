@@ -42,11 +42,11 @@ jobs:
             plugin/src/test/java/ru/talqoria/core/OfflineInspectorSelfTest.java
           java -cp "$RUNNER_TEMP/talqoria-ledger-test" ru.talqoria.core.PlacedBlockLedgerSelfTest
           java -cp "$RUNNER_TEMP/talqoria-ledger-test" ru.talqoria.core.OfflineInspectorSelfTest
-      - name: Build plugin using real Paper API
-        run: mvn -B -ntp -f plugin/pom.xml clean package
+      - name: Test wallet persistence with JUnit and build plugin
+        run: mvn -B -ntp -f plugin/pom.xml clean verify
       - uses: actions/upload-artifact@v4
         with:
           name: TalqoriaCore-dev
-          path: plugin/target/talqoria-core-0.14.0.jar
+          path: plugin/target/talqoria-core-0.15.0.jar
           retention-days: 7
           if-no-files-found: error
