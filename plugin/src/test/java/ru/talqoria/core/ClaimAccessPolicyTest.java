@@ -72,4 +72,24 @@ public final class ClaimAccessPolicyTest {
         assertTrue(ClaimAccessPolicy.denyUnlocatedTransfer(true, true, true));
         assertFalse(ClaimAccessPolicy.denyUnlocatedTransfer(false, true, true));
     }
+    @Test
+    void unclaimedVehiclesRemainDestructibleButProtectedVehiclesDoNot() {
+        assertFalse(ClaimAccessPolicy.denyUnattributedVehicleDestruction(false, false, false));
+        assertTrue(ClaimAccessPolicy.denyUnattributedVehicleDestruction(false, true, false));
+        assertTrue(ClaimAccessPolicy.denyUnattributedVehicleDestruction(false, false, true));
+        assertTrue(ClaimAccessPolicy.denyUnattributedVehicleDestruction(false, true, true));
+        assertTrue(ClaimAccessPolicy.denyUnattributedVehicleDestruction(true, false, false));
+    }
+
+    @Test
+    void dispenserFacingCellRespectsTheSameBoundaryAsPistonsAndFluids() {
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false, null, A));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false, A, null));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false, A, B));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, true, false, A, A));
+        assertFalse(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false, A, A));
+        assertFalse(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false, null, null));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(true, false, false, A, A));
+    }
+
 }

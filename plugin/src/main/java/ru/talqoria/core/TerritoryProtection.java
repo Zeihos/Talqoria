@@ -2,12 +2,15 @@ package ru.talqoria.core;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Directional;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
@@ -148,7 +151,20 @@ public final class TerritoryProtection implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void vehicleDestroy(VehicleDestroyEvent e) {
-        if (e.getAttacker() instanceof Player player && protectedFrom(player, e.getVehicle().getLocation())) e.setCancelled(true);
+        // A projectile is the damage source, but the shooter is the actor.
+        // Previously a player could bypass claims by shooting a minecart/boat.
+        Entity attacker = e.getAttacker();
+        if (attacker instanceof Projectile projectile && projectile.getShooter() instanceof Player shooter)
+            attacker = shooter;
+        if (attacker instanceof Player player) {
+            if (protectedFrom(player, e.getVehicle().getLocation())) e.setCancelled(true);
+        } else if (ClaimAccessPolicy.denyUnattributedVehicleDestruction(
+                lockdown(), spawnProtected(e.getVehicle().getLocation()),
+                !lockdown() && db.isProtected(chunk(e.getVehicle().getLocation())))) {
+            // Environmental/projectile attacks with no known player still cannot
+            // remove protected vehicles. Unknown actors never bypass lockdown.
+            e.setCancelled(true);
+        }
     }
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void entityChangesBlock(EntityChangeBlockEvent e) {
@@ -182,6 +198,19 @@ public final class TerritoryProtection implements Listener {
                 e.getBlocks().stream().anyMatch(b -> across(b, b.getRelative(e.getDirection().getOppositeFace()))))
             e.setCancelled(true);
     }
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void dispenser(BlockDispenseEvent e) {
+        if (lockdown()) { e.setCancelled(true); return; }
+        // A dispenser/dropper places liquids, items or projectiles beyond its
+        // own block. Check its facing cell rather than the dispenser location alone.
+        if (!(e.getBlock().getBlockData() instanceof Directional facing)) {
+            if (worldProtected(e.getBlock())) e.setCancelled(true);
+            return;
+        }
+        if (across(e.getBlock(), e.getBlock().getRelative(facing.getFacing())))
+            e.setCancelled(true);
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void hopperTransfer(InventoryMoveItemEvent e) {
         if (lockdown()) { e.setCancelled(true); return; }
