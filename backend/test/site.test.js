@@ -15,7 +15,7 @@ test('project website is served from source tree', async () => {
       assert.ok((await response.text()).length > 100, route);
     }
     const health = await (await fetch(base + '/api/health')).json();
-    assert.equal(health.version, '0.16.0');
+    assert.equal(health.version, '0.17.0');
   } finally {
     await new Promise((resolve, reject) =>
       server.close(error => error ? reject(error) : resolve()));

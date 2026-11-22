@@ -18,8 +18,8 @@ public final class OfflineInspectorSelfTest {
         var output = new ByteArrayOutputStream();
         try (var stream = new PrintStream(output, true, StandardCharsets.UTF_8)) {
             int result = OfflineInspector.inspect(dir, stream);
-            check(output.toString(StandardCharsets.UTF_8).contains("v0.16"),
-                    "inspector must show version 0.16");
+            check(output.toString(StandardCharsets.UTF_8).contains("v0.17"),
+                    "inspector must show version 0.17");
             return result;
         }
     }
@@ -49,7 +49,23 @@ public final class OfflineInspectorSelfTest {
             check(inspect(dir) == 3, "truncated journal must fail");
             Files.delete(journal);
             check(inspect(dir) == 0, "repaired provenance passes");
-            System.out.println("PASS: offline snapshot verification, recovery and read-only inspection");
+            Path territoryFile = dir.resolve("territories.xml");
+            Path territoryBackup = dir.resolve("territories.xml.bak");
+            TerritoryStore towns = new TerritoryStore(territoryFile, 8, 8, 16);
+            check(towns.create(UUID.randomUUID(), "Город проверки") == TerritoryStore.Result.OK,
+                    "created town for offline verification");
+            towns.save();
+            Files.copy(territoryFile, territoryBackup);
+            byte[] preserved = Files.readAllBytes(territoryBackup);
+            check(inspect(dir) == 0, "valid territory checksum passes offline inspection");
+            Files.writeString(territoryFile, "<corrupted", StandardCharsets.UTF_8);
+            check(inspect(dir) == 3, "corrupt territory snapshot must fail offline inspection");
+            check(java.util.Arrays.equals(preserved, Files.readAllBytes(territoryBackup)),
+                    "offline inspector must not overwrite territory backup");
+            Files.copy(territoryBackup, territoryFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            check(inspect(dir) == 0, "restored territory snapshot passes inspection");
+
+            System.out.println("PASS: offline provenance, territory snapshots, recovery and read-only inspection");
         } finally {
             try (var walk = Files.walk(dir)) {
                 for (Path file : walk.sorted(Comparator.reverseOrder()).toList())

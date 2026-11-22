@@ -18,7 +18,7 @@ test('preflight accepts both the project root and the server directory', () => {
       const result = spawnSync(process.execPath, [script, candidate, '--json'], { encoding: 'utf8', timeout: 15000 });
       assert.equal(result.status, 2, result.stderr);
       const data = JSON.parse(result.stdout);
-      assert.equal(data.version, '0.16.0');
+      assert.equal(data.version, '0.17.0');
       assert.equal(data.ready, false);
       assert.ok(data.checks.some(v => v.code === 'SERVER_PROPERTIES' && v.status === 'BLOCK'));
       assert.ok(data.checks.some(v => v.code === 'PAPER_JAR' && v.status === 'BLOCK'));

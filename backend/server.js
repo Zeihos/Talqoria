@@ -1,5 +1,5 @@
 'use strict';
-// TALQORIA API v0.16 — no runtime dependencies. Node.js 20+.
+// TALQORIA API v0.17 — no runtime dependencies. Node.js 20+.
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -60,7 +60,7 @@ function createApp({ token = process.env.TALQORIA_BRIDGE_TOKEN || '',
       // Disallow paths not on the allowlist. Do not expose backend files via static serving.
       const route = (req.url || '').split('?')[0];
       if (route === '/api/health' && req.method === 'GET') {
-        return reply(res, 200, { ok: true, service: 'talqoria-api', version: '0.16.0' });
+        return reply(res, 200, { ok: true, service: 'talqoria-api', version: '0.17.0' });
       }
       if (route === '/api/status' && req.method === 'GET') {
         const connected = heartbeat !== null && now() - heartbeat.at >= 0

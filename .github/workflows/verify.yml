@@ -37,6 +37,8 @@ jobs:
             plugin/src/main/java/ru/talqoria/core/PlacedBlockLedger.java \
             plugin/src/main/java/ru/talqoria/core/AuditLedger.java \
             plugin/src/main/java/ru/talqoria/core/MarketJournal.java \
+            plugin/src/main/java/ru/talqoria/core/TerritoryStore.java \
+            plugin/src/main/java/ru/talqoria/core/ClaimAccessPolicy.java \
             plugin/src/main/java/ru/talqoria/core/OfflineInspector.java \
             plugin/src/test/java/ru/talqoria/core/PlacedBlockLedgerSelfTest.java \
             plugin/src/test/java/ru/talqoria/core/OfflineInspectorSelfTest.java
@@ -47,6 +49,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: TalqoriaCore-dev
-          path: plugin/target/talqoria-core-0.16.0.jar
+          path: plugin/target/talqoria-core-0.17.0.jar
           retention-days: 7
           if-no-files-found: error

@@ -42,6 +42,7 @@ final class TerritoryCommand {
             case SELF -> "Нельзя выполнить действие по отношению к себе.";
             case ALREADY_CONTRIBUTED -> "Влияние за эту награду уже начислено.";
             case XP_LIMIT -> "Превышен допустимый лимит влияния.";
+            case STORAGE_LOCKED -> "Поселения заблокированы: требуется сверка сохранений администратором.";
         };
         say(p, text);
     }
