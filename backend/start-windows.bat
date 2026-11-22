@@ -7,7 +7,7 @@ if errorlevel 1 (
     exit /b 1
 )
 echo ======================================
-echo   TALQORIA Site + API v0.17
+echo   TALQORIA Site + API v0.18
 echo ======================================
 echo Website: http://127.0.0.1:8080
 if not defined TALQORIA_BRIDGE_TOKEN echo NOTE: status bridge disabled; no bridge token configured.

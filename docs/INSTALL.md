@@ -1,6 +1,6 @@
 # Установка и запуск TALQORIA
 
-> Документ для разработчиков и тестировщиков. TalqoriaCore 0.17.0 — Developer Alpha, а не готовый публичный сервер.
+> Документ для разработчиков и тестировщиков. TalqoriaCore 0.18.0 — Developer Alpha, а не готовый публичный сервер.
 
 [← На главную](../README.md) · [План работ](ROADMAP.md)
 
@@ -13,7 +13,7 @@
 | Node.js | 20+ для сайта и API |
 | Paper | Совместимая с вашей версией Minecraft сборка |
 
-`plugin/pom.xml` в текущей версии привязан к `paper-api:1.21.11-R0.1-SNAPSHOT`. Игровая совместимость TalqoriaCore 0.17 с Paper 26.3 **не подтверждена**. Проверка успешной компиляции не заменяет запуск и тестирование в игре.
+`plugin/pom.xml` в текущей версии привязан к `paper-api:1.21.11-R0.1-SNAPSHOT`. Игровая совместимость TalqoriaCore 0.18 с Paper 26.3 **не подтверждена**. Проверка успешной компиляции не заменяет запуск и тестирование в игре.
 
 ## 2. Получение исходников
 
@@ -34,7 +34,7 @@ cd Talqoria
 mvn -f plugin/pom.xml clean package
 ```
 
-После сборки создаётся `plugin/target/talqoria-core-0.17.0.jar`. Для установки его необходимо скопировать как `server/plugins/TalqoriaCore.jar`.
+После сборки создаётся `plugin/target/talqoria-core-0.18.0.jar`. Для установки его необходимо скопировать как `server/plugins/TalqoriaCore.jar`.
 
 Альтернативный вариант — открыть успешный прогон [GitHub Actions](https://github.com/Zeihos/Talqoria/actions/workflows/verify.yml) и скачать `TalqoriaCore-dev` из **Artifacts**. Это тестовая сборка.
 
@@ -45,7 +45,7 @@ mvn -f plugin/pom.xml clean package
 3. Для закрытого теста включите `online-mode=true`, `white-list=true`, `enable-rcon=false`.
 4. Запустите `server/start-windows.bat` либо `server/start-linux.sh`.
 5. Если Paper просит принять EULA, прочитайте условия и **самостоятельно** установите `eula=true`, только если согласны.
-6. Повторно запустите сервер. Проверьте наличие `Enabling TalqoriaCore v0.17.0` в логах и команды `/tq help`, `/tq balance`.
+6. Повторно запустите сервер. Проверьте наличие `Enabling TalqoriaCore v0.18.0` в логах и команды `/tq help`, `/tq balance`.
 
 **Предварительная диагностика:** из корня репозитория запустите `node tools/preflight.js .` или `PREFLIGHT_WINDOWS.bat` на Windows (`./PREFLIGHT_LINUX.sh` на Linux). Можно передать путь к каталогу проекта или `server/`. Проверка не изменяет файлы и помогает обнаружить отсутствующие JAR, открытый RCON, выключенную авторизацию и риски сохранений. Наличие результата READY не равно успешному тесту Paper.
 
