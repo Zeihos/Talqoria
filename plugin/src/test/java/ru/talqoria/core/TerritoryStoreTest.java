@@ -187,4 +187,44 @@ public final class TerritoryStoreTest {
         assertFalse(ClaimAccessPolicy.denyEdit(false, true, true, false));
         assertFalse(ClaimAccessPolicy.denyEdit(false, false, false, true));
     }
+    @Test
+    void automatedTransferIsDeniedAcrossDifferentTowns() throws Exception {
+        TerritoryStore store = open();
+        UUID ownerOne = UUID.randomUUID(), ownerTwo = UUID.randomUUID(), world = UUID.randomUUID();
+        var left = new TerritoryStore.ChunkKey(world, 0, 0);
+        var right = new TerritoryStore.ChunkKey(world, 1, 0);
+        var wild = new TerritoryStore.ChunkKey(world, 2, 0);
+        assertEquals(TerritoryStore.Result.OK, store.create(ownerOne, "Берег один"));
+        assertEquals(TerritoryStore.Result.OK, store.create(ownerTwo, "Берег два"));
+        assertEquals(TerritoryStore.Result.OK, store.claim(ownerOne, left));
+        assertEquals(TerritoryStore.Result.OK, store.claim(ownerTwo, right));
+        assertNull(store.claimOwner(wild));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            store.claimOwner(left), store.claimOwner(right)));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            store.claimOwner(right), store.claimOwner(wild)));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            store.claimOwner(wild), store.claimOwner(left)));
+        store.save();
+        TerritoryStore loaded = open();
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            loaded.claimOwner(left), loaded.claimOwner(right)));
+    }
+
+    @Test
+    void automatedTransferWithinOneTownIsAllowedUntilClaimsChange() throws Exception {
+        TerritoryStore store = open();
+        UUID owner = UUID.randomUUID(), world = UUID.randomUUID();
+        var left = new TerritoryStore.ChunkKey(world, 0, 0);
+        var right = new TerritoryStore.ChunkKey(world, 1, 0);
+        assertEquals(TerritoryStore.Result.OK, store.create(owner, "Одна долина"));
+        assertEquals(TerritoryStore.Result.OK, store.claim(owner, left));
+        assertEquals(TerritoryStore.Result.OK, store.claim(owner, right));
+        assertFalse(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            store.claimOwner(left), store.claimOwner(right)));
+        assertEquals(TerritoryStore.Result.OK, store.unclaim(owner, right));
+        assertTrue(ClaimAccessPolicy.denyBoundaryTransfer(false, false, false,
+            store.claimOwner(left), store.claimOwner(right)));
+    }
+
 }

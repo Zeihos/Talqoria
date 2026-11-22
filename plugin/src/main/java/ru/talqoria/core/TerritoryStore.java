@@ -140,6 +140,8 @@ public final class TerritoryStore {
         return null;
     }
     public Town townAt(ChunkKey chunk) { return towns.get(claims.get(chunk)); }
+    /** Identifier of the town owning a chunk, or null for wilderness. */
+    public UUID claimOwner(ChunkKey chunk) { return claims.get(chunk); }
     public boolean canBuild(UUID player, ChunkKey chunk) {
         if (recoveredBackup) return false;
         Town town = townAt(chunk);

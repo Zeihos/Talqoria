@@ -58,14 +58,28 @@ public final class TerritoryProtection implements Listener {
                 db.canBuild(player.getUniqueId(), chunk(location)));
     }
     private boolean protectedFrom(Player player, Block block) { return protectedFrom(player, block.getLocation()); }
-    private boolean worldProtected(Block block) {
-        return lockdown() || spawnProtected(block.getLocation()) || db.isProtected(chunk(block.getLocation()));
+    private boolean worldProtected(Location location) {
+        return lockdown() || spawnProtected(location) || db.isProtected(chunk(location));
+    }
+    private boolean worldProtected(Block block) { return worldProtected(block.getLocation()); }
+
+    private boolean across(Location from, Location to) {
+        if (lockdown()) return true;
+        // Never let a transfer move protected resources between different worlds.
+        // Bukkit locations normally have a world, but plugin-created virtual
+        // inventories may not have a usable physical location.
+        if (ClaimAccessPolicy.denyUnlocatedTransfer(false,
+                from != null && from.getWorld() != null,
+                to != null && to.getWorld() != null))
+            return true;
+        if (!from.getWorld().equals(to.getWorld()))
+            return worldProtected(from) || worldProtected(to);
+        return ClaimAccessPolicy.denyBoundaryTransfer(
+            false, spawnProtected(from), spawnProtected(to),
+            db.claimOwner(chunk(from)), db.claimOwner(chunk(to)));
     }
     private boolean across(Block a, Block b) {
-        if (lockdown()) return true;
-        TerritoryStore.ChunkKey ca = chunk(a.getLocation()), cb = chunk(b.getLocation());
-        boolean spawnA = spawnProtected(a.getLocation()), spawnB = spawnProtected(b.getLocation());
-        return spawnA != spawnB || (!db.sameTerritory(ca, cb) && (db.isProtected(ca) || db.isProtected(cb)));
+        return across(a.getLocation(), b.getLocation());
     }
     private void deny(Player player) {
         player.sendActionBar(net.kyori.adventure.text.Component.text(
@@ -162,14 +176,19 @@ public final class TerritoryProtection implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void pistonRetract(BlockPistonRetractEvent e) {
-        if (e.getBlocks().stream().anyMatch(b -> across(b, b.getRelative(e.getDirection().getOppositeFace())))) e.setCancelled(true);
+        // The piston head crosses the claim boundary even with zero pulled blocks.
+        // The getBlocks() list only describes sticky-piston payloads, not the head.
+        if (across(e.getBlock(), e.getBlock().getRelative(e.getDirection())) ||
+                e.getBlocks().stream().anyMatch(b -> across(b, b.getRelative(e.getDirection().getOppositeFace()))))
+            e.setCancelled(true);
     }
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void hopperTransfer(InventoryMoveItemEvent e) {
+        if (lockdown()) { e.setCancelled(true); return; }
         Location from = e.getSource().getLocation(), to = e.getDestination().getLocation();
-        if (from == null || to == null || !from.getWorld().equals(to.getWorld())) return;
-        TerritoryStore.ChunkKey a = chunk(from), b = chunk(to);
-        if (lockdown() || spawnProtected(from) != spawnProtected(to) ||
-                (!db.sameTerritory(a, b) && (db.isProtected(a) || db.isProtected(b)))) e.setCancelled(true);
+        // Inventory#getLocation() is nullable in the Paper API. Rather than
+        // silently allowing unknown endpoints to bypass protected inventories,
+        // block automated transfers when an endpoint cannot be located.
+        if (across(from, to)) e.setCancelled(true);
     }
 }
