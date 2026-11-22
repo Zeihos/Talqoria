@@ -12,25 +12,28 @@ import java.util.UUID;
 public final class ClaimAccessPolicy {
     private ClaimAccessPolicy() { }
 
+    /** Unknown damage sources cannot destroy protected vehicles. */
+    public static boolean denyUnattributedVehicleDestruction(boolean databaseLocked,
+                                                             boolean inSpawn, boolean inClaim) {
+        return databaseLocked || inSpawn || inClaim;
+    }
+
     public static boolean denyEdit(boolean databaseLocked, boolean staffBypass,
                                    boolean inSpawn, boolean membershipAllowsBuild) {
         if (databaseLocked) return true;
         return !staffBypass && (inSpawn || !membershipAllowsBuild);
     }
 
-    /**
-     * True when a physical transfer (fluid, pushed block, piston head, hopper item)
-     * crosses into or out of a spawn region or a different town's claim.
-     *
-     * Movements inside a single town, or between two unclaimed blocks outside
-     * spawn, are permitted. Database failures always deny movement.
-     */
     /** A physical automation with an unknown endpoint cannot be authorized safely. */
     public static boolean denyUnlocatedTransfer(boolean databaseLocked,
                                                 boolean sourceLocated, boolean destinationLocated) {
         return databaseLocked || !sourceLocated || !destinationLocated;
     }
 
+    /**
+     * True when a physical transfer (fluid, piston, hopper, dispenser)
+     * crosses the spawn boundary or a different town's claim.
+     */
     public static boolean denyBoundaryTransfer(boolean databaseLocked,
                                                boolean sourceSpawn, boolean destinationSpawn,
                                                UUID sourceTown, UUID destinationTown) {

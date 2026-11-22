@@ -1,5 +1,5 @@
 name: TalqoriaCore
-version: '0.18.0'
+version: '0.19.0'
 main: ru.talqoria.core.TalqoriaCorePlugin
 api-version: '1.21.11'
 description: TALQORIA survival quests, starter journey, guarded alpha market, towns, claims, economy and site status bridge
