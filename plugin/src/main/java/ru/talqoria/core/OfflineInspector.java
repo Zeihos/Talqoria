@@ -14,7 +14,7 @@ public final class OfflineInspector {
             out.println("ERROR: TalqoriaCore data folder does not exist: " + folder);
             return 3;
         }
-        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.14 (READ ONLY)");
+        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.16 (READ ONLY)");
         out.println("Folder: " + folder.toAbsolutePath().normalize());
         out.println("Ensure Paper is stopped. A live check can give inconsistent results.");
         int result = 0;

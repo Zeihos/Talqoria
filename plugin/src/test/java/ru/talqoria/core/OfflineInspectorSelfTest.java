@@ -18,8 +18,8 @@ public final class OfflineInspectorSelfTest {
         var output = new ByteArrayOutputStream();
         try (var stream = new PrintStream(output, true, StandardCharsets.UTF_8)) {
             int result = OfflineInspector.inspect(dir, stream);
-            check(output.toString(StandardCharsets.UTF_8).contains("v0.14"),
-                    "inspector must show version 0.14");
+            check(output.toString(StandardCharsets.UTF_8).contains("v0.16"),
+                    "inspector must show version 0.16");
             return result;
         }
     }

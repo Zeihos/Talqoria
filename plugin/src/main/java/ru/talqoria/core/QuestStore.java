@@ -3,6 +3,8 @@ package ru.talqoria.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +51,7 @@ public final class QuestStore {
         load();
     }
     public boolean recoveredBackup() { return recoveredBackup; }
+    private Path backupPath() { return file.resolveSibling(file.getFileName() + ".bak"); }
     public long today() { return daySource.getAsLong(); }
     public String receipt(UUID player, String questId) { return today() + "_" + questId + "_" + player; }
     private PlayerProgress state(UUID player) {
@@ -68,6 +71,7 @@ public final class QuestStore {
     }
     /** True if a progress value changed; never exceeds its configured target. */
     public boolean record(UUID player, Objective objective) {
+        if (recoveredBackup) return false; // recovered data is read-only
         PlayerProgress p = state(player);
         boolean changed = false;
         for (Quest q : QUESTS) {
@@ -91,6 +95,7 @@ public final class QuestStore {
     }
     /** Caller must first persist the idempotent wallet receipt (or verify it exists). */
     public boolean markClaimed(UUID player, String id) {
+        if (recoveredBackup) return false; // never change recovered claim history
         if (canClaim(player, id) != ClaimResult.READY) return false;
         return state(player).claimed.add(find(id).id());
     }
@@ -115,57 +120,120 @@ public final class QuestStore {
         Path temp = Files.createTempFile(parent, "quests-", ".tmp");
         try {
             try (OutputStream out = Files.newOutputStream(temp)) { p.storeToXML(out, "TALQORIA quests v1", "UTF-8"); }
-            // The old primary is backed up before replacement, so it never silently disappears.
-            if (Files.exists(file)) Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
+            try (FileChannel channel = FileChannel.open(temp, StandardOpenOption.WRITE)) { channel.force(true); }
+            // Avoid truncating a good .bak on an interrupted backup copy. Keep the
+            // previous snapshot until the new one is complete and durable.
+            if (Files.exists(file)) {
+                Path backupTemp = Files.createTempFile(parent, "quests-backup-", ".tmp");
+                try {
+                    Files.copy(file, backupTemp, StandardCopyOption.REPLACE_EXISTING);
+                    try (FileChannel channel = FileChannel.open(backupTemp, StandardOpenOption.WRITE)) {
+                        channel.force(true);
+                    }
+                    try { Files.move(backupTemp, backupPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
+                    catch (AtomicMoveNotSupportedException e) {
+                        Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } finally { Files.deleteIfExists(backupTemp); }
+            }
             try { Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
             catch (AtomicMoveNotSupportedException e) { Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING); }
         } finally { Files.deleteIfExists(temp); }
     }
-    private void load() throws IOException {
-        Path backup = file.resolveSibling(file.getFileName() + ".bak");
-        if (!Files.exists(file) && !Files.exists(backup)) return; // genuinely new world
-        if (!Files.exists(file)) {
-            try { read(backup); recoveredBackup = true; return; }
-            catch (Exception invalid) {
-                players.clear();
-                throw new IOException("Quest primary missing and backup invalid; recovery required", invalid);
-            }
-        }
-        try { read(file); }
-        catch (Exception first) {
-            players.clear();
-            if (!Files.exists(backup)) throw new IOException("Quest data invalid and no backup", first);
-            try { read(backup); recoveredBackup = true; }
-            catch (Exception second) {
-                players.clear();
-                throw new IOException("Quest data AND backup invalid", second);
+    /**
+     * A syntactically valid but older primary snapshot is not necessarily safe:
+     * it could silently forget a completed task, a paid claim or an entire player.
+     * When a backup exists, compare it before allowing any quest changes.
+     *
+     * A newer UTC day resets daily progress legitimately, so progress is only
+     * compared when both snapshots describe the same day.
+     */
+    private static void verifyAgainstBackup(Map<UUID, PlayerProgress> primary,
+                                            Map<UUID, PlayerProgress> previous) throws IOException {
+        for (var entry : previous.entrySet()) {
+            UUID player = entry.getKey();
+            PlayerProgress old = entry.getValue();
+            PlayerProgress current = primary.get(player);
+            if (current == null)
+                throw new IOException("Quest primary missing player preserved in backup: " + player);
+            if (current.day < old.day)
+                throw new IOException("Quest day moved backwards for player " + player);
+            if (current.day == old.day) {
+                for (Quest quest : QUESTS) {
+                    String id = quest.id();
+                    if (current.progress.getOrDefault(id, 0) < old.progress.getOrDefault(id, 0))
+                        throw new IOException("Quest progress moved backwards for player " + player + " quest " + id);
+                    if (old.claimed.contains(id) && !current.claimed.contains(id))
+                        throw new IOException("Quest claim disappeared for player " + player + " quest " + id);
+                }
             }
         }
     }
-    private void read(Path source) throws IOException {
+    private void load() throws IOException {
+        Path backup = backupPath();
+        if (!Files.exists(file) && !Files.exists(backup)) return; // new world
+        if (!Files.exists(file)) {
+            try {
+                players.putAll(read(backup));
+                recoveredBackup = true;
+                return;
+            } catch (Exception invalid) {
+                players.clear();
+                throw new IOException("Quest primary missing and backup invalid; manual recovery required", invalid);
+            }
+        }
+        try {
+            Map<UUID, PlayerProgress> current = read(file);
+            if (Files.exists(backup)) verifyAgainstBackup(current, read(backup));
+            players.putAll(current);
+        } catch (Exception primaryError) {
+            players.clear();
+            if (!Files.exists(backup))
+                throw new IOException("Quest primary invalid and no backup; manual recovery required", primaryError);
+            try {
+                players.putAll(read(backup));
+                recoveredBackup = true; // fail closed: available for inspection, not for editing
+            } catch (Exception backupError) {
+                players.clear();
+                IOException failure = new IOException("Quest primary/backup mismatch and backup invalid", backupError);
+                failure.addSuppressed(primaryError);
+                throw failure;
+            }
+        }
+    }
+    private static Map<UUID, PlayerProgress> read(Path source) throws IOException {
         Properties p = new Properties();
         try (InputStream in = Files.newInputStream(source)) { p.loadFromXML(in); }
         if (!"1".equals(p.getProperty("format"))) throw new IOException("Unsupported quest data version");
-        int count = Integer.parseInt(required(p, "players.count"));
+        final int count;
+        try { count = Integer.parseInt(required(p, "players.count")); }
+        catch (NumberFormatException invalid) { throw new IOException("Invalid quest player count", invalid); }
         if (count < 0 || count > MAX_PLAYERS) throw new IOException("Invalid player count");
-        for (int i = 0; i < count; i++) {
-            String prefix = "player." + i + ".";
-            UUID id = UUID.fromString(required(p, prefix + "uuid"));
-            long day = Long.parseLong(required(p, prefix + "day"));
-            PlayerProgress value = new PlayerProgress(day);
-            for (Quest q : QUESTS) {
-                int progress = Integer.parseInt(required(p, prefix + q.id() + ".progress"));
-                if (progress < 0 || progress > q.target()) throw new IOException("Invalid quest progress");
-                value.progress.put(q.id(), progress);
-                String claimed = required(p, prefix + q.id() + ".claimed");
-                if (!claimed.equals("true") && !claimed.equals("false")) throw new IOException("Invalid claim flag");
-                if (claimed.equals("true")) {
-                    if (progress != q.target()) throw new IOException("Claim before completion");
-                    value.claimed.add(q.id());
+        Map<UUID, PlayerProgress> loaded = new HashMap<>();
+        try {
+            for (int i = 0; i < count; i++) {
+                String prefix = "player." + i + ".";
+                UUID id = UUID.fromString(required(p, prefix + "uuid"));
+                long day = Long.parseLong(required(p, prefix + "day"));
+                PlayerProgress value = new PlayerProgress(day);
+                for (Quest quest : QUESTS) {
+                    int progress = Integer.parseInt(required(p, prefix + quest.id() + ".progress"));
+                    if (progress < 0 || progress > quest.target()) throw new IOException("Invalid quest progress");
+                    value.progress.put(quest.id(), progress);
+                    String claimed = required(p, prefix + quest.id() + ".claimed");
+                    if (!claimed.equals("true") && !claimed.equals("false"))
+                        throw new IOException("Invalid claim flag");
+                    if (claimed.equals("true")) {
+                        if (progress != quest.target()) throw new IOException("Claim before completion");
+                        value.claimed.add(quest.id());
+                    }
                 }
+                if (loaded.putIfAbsent(id, value) != null) throw new IOException("Duplicate player");
             }
-            if (players.putIfAbsent(id, value) != null) throw new IOException("Duplicate player");
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("Invalid quest snapshot record", invalid);
         }
+        return loaded;
     }
     private static String required(Properties p, String name) throws IOException {
         String value = p.getProperty(name);
