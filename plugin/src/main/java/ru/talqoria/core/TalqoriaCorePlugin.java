@@ -124,7 +124,7 @@ public final class TalqoriaCorePlugin extends JavaPlugin implements Listener {
         }
         bridge = new StatusBridge(this);
         bridge.start();
-        getLogger().info("TalqoriaCore v0.15 started. Territory lockdown: " + territoryLockdown
+        getLogger().info("TalqoriaCore v0.16 started. Territory lockdown: " + territoryLockdown
             + ", wallet lockdown: " + walletLockdown + ", audit lockdown: " + auditLockdown);
     }
 

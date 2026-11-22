@@ -47,6 +47,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: TalqoriaCore-dev
-          path: plugin/target/talqoria-core-0.15.0.jar
+          path: plugin/target/talqoria-core-0.16.0.jar
           retention-days: 7
           if-no-files-found: error
