@@ -3,6 +3,12 @@ package ru.talqoria.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,7 +31,7 @@ public final class TerritoryStore {
     public enum Result {
         OK, INVALID_NAME, NAME_TAKEN, ALREADY_IN_TOWN, NOT_IN_TOWN, NOT_OWNER,
         ALREADY_CLAIMED, CLAIM_LIMIT, NOT_CLAIMED, FOREIGN_CLAIM, MEMBER_LIMIT,
-        ALREADY_MEMBER, NOT_MEMBER, OWNER_CANNOT_LEAVE, ALREADY_OFFICER, NOT_OFFICER, ALREADY_GUEST, NOT_GUEST, SELF, ALREADY_CONTRIBUTED, XP_LIMIT
+        ALREADY_MEMBER, NOT_MEMBER, OWNER_CANNOT_LEAVE, ALREADY_OFFICER, NOT_OFFICER, ALREADY_GUEST, NOT_GUEST, SELF, ALREADY_CONTRIBUTED, XP_LIMIT, STORAGE_LOCKED
     }
     public record ChunkKey(UUID world, int x, int z) { }
 
@@ -63,6 +69,8 @@ public final class TerritoryStore {
     private final Map<UUID, Town> towns = new LinkedHashMap<>();
     private final Map<ChunkKey, UUID> claims = new HashMap<>();
     private boolean recoveredBackup;
+    private long revision;
+    private String integrityDigest;
 
     public TerritoryStore(Path file, int maxClaims, int maxMembers, int maxGuests) throws IOException {
         this.file = file;
@@ -82,6 +90,7 @@ public final class TerritoryStore {
     public int claimLimit(Town town) { return maxClaims + 2 * (town.level() - 1); }
     /** Contribution receipts make repeated quest completion safe even after a retry. */
     public Result contribute(UUID member, String receipt, long xp) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(member);
         if (town == null) return Result.NOT_IN_TOWN;
         if (receipt == null || !receipt.matches("[a-zA-Z0-9_-]{1,120}") || xp <= 0 || xp > 1000)
@@ -93,6 +102,37 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public boolean recoveredBackup() { return recoveredBackup; }
+    private Path backupPath() { return file.resolveSibling(file.getFileName() + ".bak"); }
+
+    /** Canonical integrity checksum of all snapshot properties except its own digest. */
+    private static String checksum(Properties data) {
+        try {
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            data.stringPropertyNames().stream()
+                .filter(key -> !key.equals("integrity.sha256"))
+                .sorted().forEach(key -> {
+                    String value = data.getProperty(key);
+                    byte[] bytes = (key.length() + ":" + key + value.length() + ":" + value)
+                        .getBytes(StandardCharsets.UTF_8);
+                    sha.update(bytes);
+                });
+            return HexFormat.of().formatHex(sha.digest());
+        } catch (NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
+    }
+
+    private static long checkRevision(Properties data) throws IOException {
+        final long revision;
+        try { revision = Long.parseLong(data.getProperty("snapshot.revision", "0")); }
+        catch (NumberFormatException malformed) { throw new IOException("Invalid territory revision", malformed); }
+        if (revision < 0) throw new IOException("Negative territory revision");
+        String supplied = data.getProperty("integrity.sha256");
+        if (revision > 0 && supplied == null) throw new IOException("Sealed territory snapshot has no checksum");
+        if (supplied != null && !supplied.equals(checksum(data)))
+            throw new IOException("Territory snapshot checksum mismatch; protection must lock");
+        return revision;
+    }
     public Collection<Town> towns() { return List.copyOf(towns.values()); }
     public int claimCount(Town town) { return (int) claims.values().stream().filter(town.id::equals).count(); }
     public Town townFor(UUID player) {
@@ -101,6 +141,7 @@ public final class TerritoryStore {
     }
     public Town townAt(ChunkKey chunk) { return towns.get(claims.get(chunk)); }
     public boolean canBuild(UUID player, ChunkKey chunk) {
+        if (recoveredBackup) return false;
         Town town = townAt(chunk);
         return town == null || town.members.contains(player) || town.guests.containsKey(player);
     }
@@ -109,6 +150,7 @@ public final class TerritoryStore {
         return java.util.Objects.equals(claims.get(from), claims.get(to));
     }
     public Result create(UUID owner, String inputName) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         String name = normalizeName(inputName);
         if (name == null) return Result.INVALID_NAME;
         if (townFor(owner) != null) return Result.ALREADY_IN_TOWN;
@@ -118,6 +160,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result setOfficer(UUID actor, UUID target, boolean promote) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(actor);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!town.owner.equals(actor)) return Result.NOT_OWNER;
@@ -134,6 +177,7 @@ public final class TerritoryStore {
         return town != null && canManage(town, actor);
     }
     public Result addMember(UUID owner, UUID member) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -145,6 +189,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result leave(UUID member) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(member);
         if (town == null) return Result.NOT_IN_TOWN;
         if (town.owner.equals(member)) return Result.OWNER_CANNOT_LEAVE;
@@ -153,6 +198,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result kick(UUID owner, UUID member) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -163,6 +209,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result disband(UUID owner) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!town.owner.equals(owner)) return Result.NOT_OWNER;
@@ -171,6 +218,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result claim(UUID owner, ChunkKey chunk) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -180,6 +228,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result unclaim(UUID owner, ChunkKey chunk) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -190,6 +239,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result trust(UUID owner, UUID guest, String name) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -200,6 +250,7 @@ public final class TerritoryStore {
         return Result.OK;
     }
     public Result untrust(UUID owner, String playerName) {
+        if (recoveredBackup) return Result.STORAGE_LOCKED;
         Town town = townFor(owner);
         if (town == null) return Result.NOT_IN_TOWN;
         if (!canManage(town, owner)) return Result.NOT_OWNER;
@@ -233,8 +284,19 @@ public final class TerritoryStore {
                 throw new IOException("Territory primary missing and backup invalid; recovery required", invalid);
             }
         }
-        try { read(file); }
-        catch (Exception primary) {
+        try {
+            read(file);
+            if (Files.exists(backup)) {
+                // A fully parsed backup is required for trustworthy recovery. Do not
+                // silently accept an invalid backup while claim protection is active.
+                TerritoryStore old = new TerritoryStore(backup, maxClaims, maxMembers, maxGuests);
+                if (old.recoveredBackup) throw new IOException("Nested recovery in territory backup");
+                if (revision < old.revision ||
+                        (revision > 0 && revision == old.revision &&
+                         !java.util.Objects.equals(integrityDigest, old.integrityDigest)))
+                    throw new IOException("Territory primary is older than backup or has diverged at same revision");
+            }
+        } catch (Exception primary) {
             towns.clear(); claims.clear();
             if (!Files.exists(backup)) throw new IOException("Territory data corrupt, no backup: " + primary.getMessage(), primary);
             try { read(backup); recoveredBackup = true; }
@@ -253,6 +315,7 @@ public final class TerritoryStore {
         Properties p = new Properties();
         try (InputStream in = Files.newInputStream(source)) { p.loadFromXML(in); }
         if (!"1".equals(required(p, "format"))) throw new IOException("Unsupported territory version");
+        long loadedRevision = checkRevision(p);
         int townCount = Integer.parseInt(required(p, "towns.count"));
         int claimCount = Integer.parseInt(required(p, "claims.count"));
         if (townCount < 0 || townCount > 100_000 || claimCount < 0 || claimCount > 2_000_000)
@@ -311,9 +374,12 @@ public final class TerritoryStore {
         }
         // Existing claims remain protected if an operator reduces configured caps.
         // The new cap is only enforced for future claims.
+        revision = loadedRevision;
+        integrityDigest = checksum(p);
     }
     public void save() throws IOException {
         if (recoveredBackup) throw new IOException("Territory store recovered from backup; manual reconciliation required");
+        if (revision == Long.MAX_VALUE) throw new IOException("Territory snapshot revision exhausted");
         Properties p = new Properties();
         p.setProperty("format", "1");
         p.setProperty("towns.count", Integer.toString(towns.size()));
@@ -339,13 +405,35 @@ public final class TerritoryStore {
             p.setProperty(prefix + "z", Integer.toString(claim.getKey().z()));
             p.setProperty(prefix + "town", claim.getValue().toString());
         }
-        Files.createDirectories(file.toAbsolutePath().getParent());
-        Path temp = Files.createTempFile(file.toAbsolutePath().getParent(), "territories-", ".tmp");
+        long nextRevision = revision + 1;
+        p.setProperty("snapshot.revision", Long.toString(nextRevision));
+        String seal = checksum(p);
+        p.setProperty("integrity.sha256", seal);
+        Path parent = file.toAbsolutePath().getParent();
+        Files.createDirectories(parent);
+        Path temp = Files.createTempFile(parent, "territories-", ".tmp");
         try {
             try (OutputStream out = Files.newOutputStream(temp)) { p.storeToXML(out, "TALQORIA territories v1", "UTF-8"); }
-            if (Files.exists(file)) Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
+            try (FileChannel channel = FileChannel.open(temp, StandardOpenOption.WRITE)) { channel.force(true); }
+            // Never truncate an existing .bak while copying. Stage the old primary,
+            // force it to disk and replace the backup atomically when supported.
+            if (Files.exists(file)) {
+                Path backupTemp = Files.createTempFile(parent, "territories-backup-", ".tmp");
+                try {
+                    Files.copy(file, backupTemp, StandardCopyOption.REPLACE_EXISTING);
+                    try (FileChannel channel = FileChannel.open(backupTemp, StandardOpenOption.WRITE)) {
+                        channel.force(true);
+                    }
+                    try { Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
+                    catch (AtomicMoveNotSupportedException e) {
+                        Files.move(backupTemp, backupPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } finally { Files.deleteIfExists(backupTemp); }
+            }
             try { Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
             catch (AtomicMoveNotSupportedException e) { Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING); }
+            revision = nextRevision;
+            integrityDigest = seal;
         } finally { Files.deleteIfExists(temp); }
     }
 }

@@ -3,7 +3,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 echo ===========================================
-echo TALQORIA v0.16 - BUILD TalqoriaCore
+echo TALQORIA v0.17 - BUILD TalqoriaCore
  echo ===========================================
 
 where javac >nul 2>&1
@@ -72,13 +72,13 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "plugin\target\talqoria-core-0.16.0.jar" (
+if not exist "plugin\target\talqoria-core-0.17.0.jar" (
   echo [ERROR] Build returned success but the expected JAR is missing.
   pause
   exit /b 1
 )
 if not exist "server\plugins" mkdir "server\plugins"
-copy /Y "plugin\target\talqoria-core-0.16.0.jar" "server\plugins\TalqoriaCore.jar" >nul
+copy /Y "plugin\target\talqoria-core-0.17.0.jar" "server\plugins\TalqoriaCore.jar" >nul
 if errorlevel 1 (
   echo [ERROR] Built, but failed to copy JAR into server\plugins.
   pause

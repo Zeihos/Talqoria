@@ -14,7 +14,7 @@ public final class OfflineInspector {
             out.println("ERROR: TalqoriaCore data folder does not exist: " + folder);
             return 3;
         }
-        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.16 (READ ONLY)");
+        out.println("TALQORIA OFFLINE DATA INSPECTOR v0.17 (READ ONLY)");
         out.println("Folder: " + folder.toAbsolutePath().normalize());
         out.println("Ensure Paper is stopped. A live check can give inconsistent results.");
         int result = 0;
@@ -66,6 +66,24 @@ public final class OfflineInspector {
                     result = 3;
                 }
             } else out.println(filename + ": not present (normal for a brand new server)");
+        }
+        // Verify the actual territory parser in read-only mode, including the
+        // primary/backup revision and integrity seal, before the server restarts.
+        Path townFile = folder.resolve("territories.xml");
+        Path townBackup = folder.resolve("territories.xml.bak");
+        if (Files.exists(townFile) || Files.exists(townBackup)) {
+            try {
+                TerritoryStore store = new TerritoryStore(townFile, 1_000_000, 250_000, 250_000);
+                if (store.recoveredBackup()) {
+                    out.println("TERRITORIES: RECOVERY REQUIRED — primary/backup inconsistent; claims stay locked");
+                    result = 3;
+                } else {
+                    out.println("TERRITORIES: VERIFIED " + store.towns().size() + " towns (read only)");
+                }
+            } catch (IOException | RuntimeException invalid) {
+                out.println("TERRITORIES: INVALID — " + invalid.getMessage());
+                result = 3;
+            }
         }
         // The same WAL parser used by the plugin verifies format, checksum and replay.
         // Reading this state does not checkpoint, overwrite or migrate saved files.

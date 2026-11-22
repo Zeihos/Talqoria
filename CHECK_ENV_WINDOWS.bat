@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 echo ===========================================
-echo TALQORIA v0.16 - BUILD ENVIRONMENT CHECK
+echo TALQORIA v0.17 - BUILD ENVIRONMENT CHECK
  echo ===========================================
 where javac >nul 2>&1
 if errorlevel 1 (echo [FAIL] JDK not found. Install JDK 21 or newer. & goto :fail)
